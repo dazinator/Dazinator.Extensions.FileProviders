@@ -6,13 +6,13 @@ using Microsoft.Extensions.Primitives;
 namespace Dazinator.AspNet.Extensions.FileProviders
 {
     /// <summary>
-    /// Maps requests for files to an underlying file provider, based on a flexibile mapping.
+    /// Maps request to an underlying file provider, but handles an additional path that can be prepended to the subpath.
     /// </summary>
     public class RequestPathFileProvider : IFileProvider
     {
 
-        private string _basePath;
-        private IFileProvider _underlyingFileProvider;
+        private readonly string _basePath;
+        private readonly IFileProvider _underlyingFileProvider;
 
         public RequestPathFileProvider(string basePath, IFileProvider underlyingFileProvider)
         {
