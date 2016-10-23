@@ -1,13 +1,19 @@
 {
   "title": "Dazinator.AspNet.Extensions.FileProviders",
   "description": "Dazinator.AspNet.Extensions.FileProviders",
-  "version": "1.0.0-*",
-
+  "version": "0.1.0",
   "dependencies": {
     "Microsoft.Extensions.FileProviders.Abstractions": "1.0.0",
     "NETStandard.Library": "1.6.0"
   },
-
+  "tools": {
+    "dotnet-gitversion": {
+      "version": "*",
+      "imports": [
+        "dotnet"
+      ]
+    }
+  },
   "frameworks": {
     "netstandard1.6": {
       "imports": "dnxcore50"
