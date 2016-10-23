@@ -71,17 +71,5 @@ namespace Dazinator.AspNet.Extensions.FileProviders
             return _underlyingFileProvider.Watch(newPath);
             //  return NullChangeToken.Singleton;
         }
-
-        public bool Like(string pattern)
-        {
-
-            var regex = new Regex("^" + Regex.Escape(pattern).Replace(@"\*", ".*").Replace(@"\?", ".") + "$",
-                RegexOptions.IgnoreCase | RegexOptions.Singleline);
-
-            var path = this.ToString();
-
-            var isMatch = regex.IsMatch(path);
-            return isMatch;
-        }
     }
 }
