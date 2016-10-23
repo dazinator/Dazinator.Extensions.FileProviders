@@ -8,7 +8,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		global.json = global.json
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "MappingFileProvider", "MappingFileProvider\MappingFileProvider.xproj", "{D92D27B0-0FC2-4A89-A809-0DC76F0ABD37}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Dazinator.AspNet.Extensions.FileProviders", "Dazinator.AspNet.Extensions.FileProviders\Dazinator.AspNet.Extensions.FileProviders.xproj", "{D92D27B0-0FC2-4A89-A809-0DC76F0ABD37}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Dazinator.AspNet.Extensions.FileProviders.Tests", "Dazinator.AspNet.Extensions.FileProviders.Tests\Dazinator.AspNet.Extensions.FileProviders.Tests.xproj", "{7CC55CA1-2EE0-4398-86C7-68B763BE8569}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +22,10 @@ Global
 		{D92D27B0-0FC2-4A89-A809-0DC76F0ABD37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D92D27B0-0FC2-4A89-A809-0DC76F0ABD37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D92D27B0-0FC2-4A89-A809-0DC76F0ABD37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CC55CA1-2EE0-4398-86C7-68B763BE8569}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CC55CA1-2EE0-4398-86C7-68B763BE8569}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CC55CA1-2EE0-4398-86C7-68B763BE8569}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CC55CA1-2EE0-4398-86C7-68B763BE8569}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
