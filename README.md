@@ -5,9 +5,9 @@ Provides some additonal `IFileProvider` implementations that others may find use
 
 ## RequestPathFileProvider 
 
-This let's you wrap an existing `IFileProvider` with one that will resolve all of its files with an additional "path" prepended to the oridinary paths. 
+This file provider can wrap an existing `IFileProvider` but allows you to prepend information to the path that it's files are resolved on.
 
-For example, let's say your `IFileProvider` exposes a file on `/myfile.txt`, but that you want to serve the file on `/specialfiles/myfile.txt`. 
+For example, let's say you have an `IFileProvider` which resolves a file on the subpath `/myfile.txt`, however, when you serve the file using MVC in the browser, you want it's path to be `/specialfiles/myfile.txt`. 
 
 You can do this:
 
@@ -17,3 +17,5 @@ You can do this:
             var sut = new RequestPathFileProvider("/specialfiles", originalFileProvider);
 
 ```
+
+Now you can resolve exactly the same files and directories through the `RequestPathFileProvider` that the original `FileProvider` has, but you must do so using subpaths that have `/specialfiles` prepended.
