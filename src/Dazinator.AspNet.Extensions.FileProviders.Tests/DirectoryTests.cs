@@ -94,6 +94,7 @@ namespace FileProvider.Tests
         [InlineData("/some/dir/folder/file.txt|/some/dir/folder/file.csv", "/some/dir/folder/file.*", 2)]
         [InlineData("/file.txt|/folder/file.csv", "/*file.txt", 1)]
         [InlineData("/file.txt|/folder/file.csv", "*file.csv", 1)]
+        [InlineData("/file.txt|/folder/file.csv", "*file.*", 2)]
         public void Can_Search_Directory(string files, string pattern, int expectedMatchCount)
         {
             // Arrange
