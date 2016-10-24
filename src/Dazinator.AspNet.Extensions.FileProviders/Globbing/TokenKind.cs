@@ -18,7 +18,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
         Identifier = 9,              // Letter or Number
 
         WindowsRoot = 10,           // :
-
+       // Period = 11,
         EOT = 100,
     }
 }

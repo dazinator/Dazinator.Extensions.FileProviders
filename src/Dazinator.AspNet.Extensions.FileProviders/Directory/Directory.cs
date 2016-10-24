@@ -4,21 +4,36 @@ using Microsoft.Extensions.FileProviders;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
-    public class Directory : IDirectory
+    public class InMemoryDirectory : IDirectory
     {
 
         private readonly IFolderDirectoryItem _rootFolder;
 
-        public Directory() : this(new FolderDirectoryItem(string.Empty, null))
+        public InMemoryDirectory() : this(new FolderDirectoryItem(string.Empty, null))
         {
         }
 
-        public Directory(IFolderDirectoryItem rootFolder)
+        public InMemoryDirectory(IFolderDirectoryItem rootFolder)
         {
             _rootFolder = rootFolder;
         }
 
-        public IFolderDirectoryItem GetOrAddDirectory(string directory)
+        public IFolderDirectoryItem GetFolder(string path)
+        {
+            IDirectoryItem result = GetItem(path);
+            if (result != null)
+            {
+                if (result.IsFolder)
+                {
+                    var item = ((IFolderDirectoryItem)result);
+                    return item;
+                }
+            }
+
+            return null;
+        }
+
+        public IFolderDirectoryItem GetOrAddFolder(string directory)
         {
 
             if (string.IsNullOrWhiteSpace(directory))
@@ -46,36 +61,18 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         public IFolderDirectoryItem Root => _rootFolder;
 
-        public bool TryGetFile(string path, out IFileDirectoryItem fileItem)
+        public IFileDirectoryItem GetFile(string path)
         {
-            IDirectoryItem result;
-            if (TryGetItem(path, out result))
+            IDirectoryItem result = GetItem(path);
+            if (result != null)
             {
                 if (!result.IsFolder)
                 {
-                    fileItem = ((IFileDirectoryItem)result);
-                    return true;
+                    var fileItem = ((IFileDirectoryItem)result);
+                    return fileItem;
                 }
             }
-
-            fileItem = null;
-            return false;
-        }
-
-        public bool TryGetFolder(string path, out IFolderDirectoryItem fileItem)
-        {
-            IDirectoryItem result;
-            if (TryGetItem(path, out result))
-            {
-                if (result.IsFolder)
-                {
-                    fileItem = ((IFolderDirectoryItem)result);
-                    return true;
-                }
-            }
-
-            fileItem = null;
-            return false;
+            return null;
         }
 
         /// <summary>
@@ -84,12 +81,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <param name="path"></param>
         /// <param name="item"></param>
         /// <returns></returns>
-        public bool TryGetItem(string path, out IDirectoryItem item)
+        public IDirectoryItem GetItem(string path)
         {
+            //IDirectoryItem result = null;
             if (string.IsNullOrWhiteSpace(path))
             {
-                item = this._rootFolder; // return root folder if path is null or empty.
-                return true;
+                // result = this._rootFolder; // return root folder if path is null or empty.
+                return this._rootFolder;
             }
 
             var segments = PathUtils.SplitPathIntoSegments(path);
@@ -102,15 +100,12 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 if (currentDirectoryItem == null)
                 {
                     // the item doesn't exist in the directory.
-                    item = null;
-                    return false;
+                    return null;
                 }
 
             }
 
-            item = currentDirectoryItem;
-            return true;
-
+            return currentDirectoryItem;
         }
 
         /// <summary>
@@ -120,42 +115,27 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <returns></returns>
         public IEnumerable<IDirectoryItem> Search(string globPattern)
         {
-            var results = new GlobPatternEnumerableDirectoryItems(_rootFolder, globPattern);
+            // see https://github.com/kthompson/csharp-glob/issues/2
+            var modifiedPattern = globPattern;
+            //if (!globPattern.StartsWith("/") || !globPattern.StartsWith("\\"))
+            //{
+            //    modifiedPattern = "/" + modifiedPattern;
+            //}
+            var results = new GlobPatternEnumerableDirectoryItems(_rootFolder, modifiedPattern);
             return results;
         }
 
         public IFileDirectoryItem AddFile(string folderPath, IFileInfo file)
         {
-            var folder = GetOrAddDirectory(folderPath);
+            var folder = GetOrAddFolder(folderPath);
             var result = folder.AddFile(file);
             return result;
         }
 
         public void UpdateFile(string folderPath, IFileInfo fileInfo)
         {
-            //var existingFile = GetFileInfo(path);
-            IFolderDirectoryItem folder;
-            if (TryGetFolder(folderPath, out folder))
-            {
-                folder.UpdateFile(fileInfo);
-            }
-
-            //AddFile()
-
-
-            // Files[path] = stringFileInfo;
-
-            // IChangeToken fileToken;
-            // if (_matchInfoCache.TryGetValue(path, out fileToken))
-            // {
-            //     var inMemory = fileToken as InMemoryChangeToken;
-            //     if (inMemory != null)
-            //     {
-            //         // return existing token for this file path.
-            //         inMemory.HasChanged = true;
-            //         inMemory.RaiseCallback(stringFileInfo);
-            //     }
-            // }
+            IFolderDirectoryItem folder = GetFolder(folderPath);
+            folder?.UpdateFile(fileInfo);
         }
 
 

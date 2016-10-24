@@ -7,9 +7,11 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
     {
         private Scanner _scanner;
         private Token _currentToken;
+      //  private string _rootPath;
 
         public Parser(string pattern = null)
         {
+          //  _rootPath = rootPath;
             if (!string.IsNullOrEmpty(pattern))
                 this._scanner = new Scanner(pattern);
         }
@@ -148,10 +150,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
                 this.Accept(TokenKind.WindowsRoot);
                 return new GlobNode(GlobNodeType.Root, ident);
             }
-
-            throw new InvalidOperationException();
-
-           // return new GlobNode(GlobNodeType.Root, Directory.GetCurrentDirectory());
+          
+            return new GlobNode(GlobNodeType.Root);
+          
         }
 
         private GlobNode ParseTree()
@@ -159,6 +160,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
             var items = new List<GlobNode>();
 
             items.Add(this.ParseRoot());
+
+            this.AcceptIt();
+            items.Add(this.ParseSegment());
 
             while (this._currentToken.Kind == TokenKind.PathSeperator)
             {

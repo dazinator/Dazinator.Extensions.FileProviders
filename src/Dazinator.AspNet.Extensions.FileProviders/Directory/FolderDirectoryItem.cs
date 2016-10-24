@@ -24,7 +24,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         public Dictionary<string, IDirectoryItem> Items { get; set; }
 
-        public string Path => ParentFolder?.Path + "/" + Name;
+        public string Path => ParentFolder == null ? Name : ParentFolder.Path + "/" + Name;
 
         public string Name => FileInfo.Name;
 

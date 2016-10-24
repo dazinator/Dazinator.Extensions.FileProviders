@@ -67,9 +67,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
 
         private TokenKind ScanToken()
         {
-            if (IsAlphaNumeric(this._currentCharacter))
+            if (IsNonSpecialCharacter(this._currentCharacter))
             {
-                while (IsAlphaNumeric(this._currentCharacter))
+                while (IsNonSpecialCharacter(this._currentCharacter))
                 {
                     this.TakeIt();
                 }
@@ -130,9 +130,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
             }
         }
 
-        private static bool IsAlphaNumeric(char? c)
+        private static bool IsNonSpecialCharacter(char? c)
         {
-            return c != null && char.IsLetterOrDigit(c.Value);
+            return (c != null && char.IsLetterOrDigit(c.Value)) || c == '.';
         }
     }
 }

@@ -7,20 +7,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
     public interface IDirectory
     {
 
-        bool TryGetItem(string path, out IDirectoryItem item);
-        bool TryGetFile(string path, out IFileDirectoryItem fileItem);
-        bool TryGetFolder(string path, out IFolderDirectoryItem fileItem);
-
-        IFolderDirectoryItem GetOrAddDirectory(string directory);
-
+        IDirectoryItem GetItem(string path);
+        IFileDirectoryItem GetFile(string path);
+        IFolderDirectoryItem GetFolder(string path);
+        IFolderDirectoryItem GetOrAddFolder(string directory);
         IFolderDirectoryItem Root { get; }
-
         IEnumerable<IDirectoryItem> Search(string globPattern);
-
         IFileDirectoryItem AddFile(string directory, IFileInfo file);
-
-
-     
 
     }
 }

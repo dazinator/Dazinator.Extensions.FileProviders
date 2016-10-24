@@ -28,19 +28,18 @@ namespace Dazinator.AspNet.Extensions.FileProviders
 
         public IFileInfo GetFileInfo(string subpath)
         {
-            IFileDirectoryItem result;
-            if (!Directory.TryGetFile(subpath, out result))
+            IFileDirectoryItem result = Directory.GetFile(subpath);
+            if (result==null)
             {
                 return new NotFoundFileInfo(subpath);
             }
-
             return result.FileInfo;
         }
 
         public IDirectoryContents GetDirectoryContents(string subpath)
         {
-            IFolderDirectoryItem folder;
-            if (!Directory.TryGetFolder(subpath, out folder))
+            IFolderDirectoryItem folder = Directory.GetFolder(subpath);
+            if (folder==null)
             {
                 return new NotFoundDirectoryContents();
             }

@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
 {
@@ -9,9 +10,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
 
         private GlobNode _root;
         private Regex _regex;
+       // private readonly string _rootPath;
+        // private readonly IHostingEnvironment _env;
 
         public Glob(string pattern, GlobOptions options = GlobOptions.None)
         {
+            // _env = env;
+           // _rootPath = rootPath;
             this.Pattern = pattern;
             if (options.HasFlag(GlobOptions.Compiled))
             {
