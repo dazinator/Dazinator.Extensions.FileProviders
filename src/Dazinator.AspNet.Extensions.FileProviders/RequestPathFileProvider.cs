@@ -1,5 +1,4 @@
-﻿using System;
-using System.Text.RegularExpressions;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
 
@@ -11,22 +10,27 @@ namespace Dazinator.AspNet.Extensions.FileProviders
     public class RequestPathFileProvider : IFileProvider
     {
 
-        private readonly string _basePath;
+        private readonly PathString _basePath;
         private readonly IFileProvider _underlyingFileProvider;
 
         public RequestPathFileProvider(string basePath, IFileProvider underlyingFileProvider)
         {
-            _basePath = basePath;
+            _basePath = new PathString(basePath);
+            //_basePath = PathString.FromUriComponent(basePath);
             _underlyingFileProvider = underlyingFileProvider;
         }
 
         protected virtual bool TryMapSubPath(string originalSubPath, out string newSubPath)
         {
-            if (originalSubPath != null && originalSubPath.StartsWith(_basePath))
+            if (originalSubPath != null)
             {
-                var childPath = originalSubPath.Remove(0, _basePath.Length);
-                newSubPath = childPath;
-                return true;
+                var originalSubPathString = new PathString(originalSubPath);
+                if (originalSubPathString.HasValue && originalSubPathString.StartsWithSegments(_basePath))
+                {
+                    var childPath = originalSubPath.Remove(0, _basePath.Value.Length);
+                    newSubPath = childPath;
+                    return true;
+                }
             }
 
             newSubPath = null;
