@@ -60,8 +60,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
                 case GlobNodeType.WildcardString:
                     return ProcessWildcardString(node);
                 default:
-                    throw new InvalidOperationException();
-
+                    throw new InvalidOperationException("Expected SubSegment, found " + node.Type);
             }
         }
 
@@ -107,5 +106,5 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
             return string.Empty;
         }
     }
-    
+
 }

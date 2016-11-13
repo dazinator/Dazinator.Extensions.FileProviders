@@ -48,6 +48,15 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
                 this._currentCharacter = this._source[this._sourceIndex];
         }
 
+        private char? PeekChar()
+        {
+            var sourceIndex = this._sourceIndex + 1;
+            if (sourceIndex >= this._source.Length)
+                return null;
+            else
+                return this._source[sourceIndex];
+        }
+
         public Token Peek()
         {
             var index = this._sourceIndex;
@@ -67,9 +76,19 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
 
         private TokenKind ScanToken()
         {
-            if (IsNonSpecialCharacter(this._currentCharacter))
+            if (this._currentCharacter == null)
+                return TokenKind.EOT;
+
+            if (char.IsLetter(this._currentCharacter.Value) && this.PeekChar() == ':')
             {
-                while (IsNonSpecialCharacter(this._currentCharacter))
+                TakeIt(); // letter
+                TakeIt(); // :
+                return TokenKind.WindowsRoot;
+            }
+
+            if (IsAlphaNumeric(this._currentCharacter))
+            {
+                while (IsAlphaNumeric(this._currentCharacter))
                 {
                     this.TakeIt();
                 }
@@ -118,21 +137,14 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
                     this.TakeIt();
                     return TokenKind.PathSeperator;
 
-                case ':':
-                    this.TakeIt();
-                    return TokenKind.WindowsRoot;
-
-                case null:
-                    return TokenKind.EOT;
-
                 default:
                     throw new Exception("Unable to scan for next token. Stuck on '" + this._currentCharacter + "'");
             }
         }
 
-        private static bool IsNonSpecialCharacter(char? c)
+        private static bool IsAlphaNumeric(char? c)
         {
-            return (c != null && char.IsLetterOrDigit(c.Value)) || c == '.';
+            return c != null && (char.IsLetterOrDigit(c.Value) || c == '.');
         }
     }
 }
