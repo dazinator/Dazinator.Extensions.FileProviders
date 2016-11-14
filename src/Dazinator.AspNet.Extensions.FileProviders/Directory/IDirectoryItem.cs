@@ -18,7 +18,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <returns></returns>
         IDirectoryItem GetChildDirectoryItem(string name);
 
-        IFileInfo FileInfo { get;  }
+        IFileInfo FileInfo { get; }
 
         string Path { get; }
 
@@ -26,5 +26,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         event EventHandler<DirectoryItemDeletedEventArgs> Deleted;
 
         void OnDeleted();
+
+        /// <summary>
+        /// Deletes the item from the directory.
+        /// </summary>
+        void Delete();
+
+
+
     }
 }

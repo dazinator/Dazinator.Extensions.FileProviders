@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.FileProviders;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
@@ -56,7 +57,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         }
 
         /// <summary>
-        ///Adds ther file to the folder, overwriting the file if it exists..
+        /// Updates the existing item in the directory, overwriting it..
         /// </summary>
         /// <param name="file"></param>
         /// <returns></returns>
@@ -65,6 +66,105 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             var existingItem = GetFileItem(file.Name);
             existingItem.Update(file);
             return existingItem;
+        }
+
+        public void Rename(string newName)
+        {
+            var newDirItem = new DirectoryFileInfo(newName);
+            Update(newDirItem);
+        }
+
+        /// <summary>
+        /// Deletes an empty folder.
+        /// </summary>
+        /// <param name="recursive"></param>
+        public void Delete()
+        {
+            if (Items != null && Items.Any())
+            {
+                throw new InvalidOperationException("Cannot delete a non empty folder, either delete the contents / items in the folder first, or user a recursive delete.");
+            }
+
+            //the parent calls on deleted once the child is removed.
+            if (this.ParentFolder != null)
+            {
+                this.ParentFolder.RemoveItem(this.Name);
+            }
+            else
+            {
+                // root folder
+                OnDeleted();
+            }
+        }
+
+        /// <summary>
+        /// Deletes the folder. If recursive is specified, then will also delete all of its contents.
+        /// </summary>
+        /// <param name="recursive"></param>
+        public void Delete(bool recursive)
+        {
+            if (Items != null && Items.Any())
+            {
+                if (!recursive)
+                {
+                    throw new InvalidOperationException("Cannot delete a non empty folder, unless you specify a recursive delete.");
+                }
+            }
+
+            
+            foreach (var item in Items.ToArray()) // We ToArray because Items gets modified during a Delete() call.
+            {
+                if (item.Value.IsFolder)
+                {
+                    var folder = item.Value as IFolderDirectoryItem;
+                    if (folder != null)
+                    {
+                        folder.Delete(recursive);
+                    }
+                }
+                else
+                {
+                    item.Value.Delete();
+                }
+            }
+
+            //the parent calls on deleted once the child is removed.
+            if (this.ParentFolder != null)
+            {
+                this.ParentFolder.RemoveItem(this.Name);
+            }
+            else
+            {
+                // root folder
+                OnDeleted();
+            }
+        }
+
+        public void Update(IFileInfo newFileInfo)
+        {
+            // take a snapshot of current directory item with the old file.
+            var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder);
+            // now change the file to the new file on this item.
+            FileInfo = newFileInfo;
+            // now signal the file has changed.
+            OnRaiseItemUpdated(oldItem);
+        }
+
+        private void OnRaiseItemUpdated(FolderDirectoryItem oldItem)
+        {
+            // Make a temporary copy of the event to avoid possibility of
+            // a race condition if the last subscriber unsubscribes
+            // immediately after the null check and before the event is raised.
+            EventHandler<DirectoryItemUpdatedEventArgs> handler = Updated;
+
+            // Event will be null if there are no subscribers
+            if (handler != null)
+            {
+                var args = new DirectoryItemUpdatedEventArgs(oldItem, this);
+
+                // Use the () operator to raise the event.
+                handler(this, args);
+            }
         }
 
         private IFileDirectoryItem GetFileItem(string path)
@@ -93,7 +193,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             return null;
 
         }
-       
+
         public event EventHandler<DirectoryItemAddedEventArgs> ItemAdded;
         public event EventHandler<DirectoryItemUpdatedEventArgs> Updated;
         public event EventHandler<DirectoryItemDeletedEventArgs> Deleted;
@@ -187,6 +287,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         public bool RemoveItem(string name)
         {
             var existing = Items[name];
+
+            // todo: could put in check here for deleting folders with items.. rather than in delete method.
+            
             var result = Items.Remove(name);
             if (result)
             {
@@ -211,7 +314,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 handler(this, args);
             }
         }
-      
+
         public void OnDeleted()
         {
             FileInfo = new NotFoundFileInfo(this.FileInfo.Name);
@@ -251,6 +354,8 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
             return this.Path.Equals(item.Path);
         }
+
+
 
 
 

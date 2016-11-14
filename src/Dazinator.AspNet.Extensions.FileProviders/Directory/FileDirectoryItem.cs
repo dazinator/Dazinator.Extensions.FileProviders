@@ -78,7 +78,12 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             }
         }
 
-      
-
+        public void Delete()
+        {
+            if (this.ParentFolder != null)
+            {
+                this.ParentFolder.RemoveItem(this.Name);
+            }
+        }
     }
 }

@@ -102,6 +102,169 @@ namespace FileProvider.Tests
             var results = directory.Search(pattern).ToList();
             Assert.Equal(expectedMatchCount, results.Count);
         }
+        
+       
+        [Fact]
+        public void Can_Delete_A_Folder_Containing_Items()
+        {
+            // given /root/child/grandchild/foo.txt
+            // deleting the "child" folder should also delete all descendents which are
+            // "grandchild" folder, and foo.txt.
+
+            var rootFolder = new FolderDirectoryItem("root", null);
+            var childFolder = rootFolder.GetOrAddFolder("child");
+            var grandchildFolder = childFolder.GetOrAddFolder("grandchild");
+
+            var fileInfo = new StringFileInfo("contents", "foo.txt");
+            var fileItem = grandchildFolder.AddFile(fileInfo);
+
+            // Should get notified when each folder and file is deleted.
+            bool childDeletionNotified = false;
+            childFolder.Deleted += (sender, e) =>
+            {
+                DirectoryItemDeletedEventArgs args = e;
+                IDirectoryItem deletedItem = e.DeletedItem;
+                Assert.True(deletedItem.IsFolder);
+                Assert.Equal("child", deletedItem.Name);
+                childDeletionNotified = true;
+            };
+
+            bool grandchildDeletionNotified = false;
+            grandchildFolder.Deleted += (sender, e) =>
+            {
+                DirectoryItemDeletedEventArgs args = e;
+                IDirectoryItem deletedItem = e.DeletedItem;
+                Assert.True(deletedItem.IsFolder);
+                Assert.Equal("grandchild", deletedItem.Name);
+                grandchildDeletionNotified = true;
+            };
+
+            bool fileDeletionNotified = false;
+            fileItem.Deleted += (sender, e) =>
+            {
+                DirectoryItemDeletedEventArgs args = e;
+                IDirectoryItem deletedItem = e.DeletedItem;
+                Assert.False(deletedItem.IsFolder);
+                Assert.Equal("foo.txt", deletedItem.Name);
+                fileDeletionNotified = true;
+            };
+
+            childFolder.Delete(true);
+            Assert.True(childDeletionNotified);
+            Assert.True(grandchildDeletionNotified);
+            Assert.True(fileDeletionNotified);
+
+            // the deleted items should have had their fileinfo's set to not exist.
+            Assert.False(childFolder.FileInfo.Exists);
+            Assert.False(grandchildFolder.FileInfo.Exists);
+            Assert.False(fileItem.FileInfo.Exists);
+
+            // verify child items are no longer in directory.
+            var item = rootFolder.GetChildDirectoryItem("child");
+            Assert.Null(item);
+
+            item = childFolder.GetChildDirectoryItem("grandchild");
+            Assert.Null(item);
+
+            item = grandchildFolder.GetChildDirectoryItem("foo.txt");
+            Assert.Null(item);
+
+        }
+
+
+        [Fact]
+        public void Deleting_A_Folder_Raises_An_Event()
+        {
+
+            var rootFolder = new FolderDirectoryItem("root", null);
+            var childFolder = rootFolder.GetOrAddFolder("child");
+            bool notified = false;
+
+            childFolder.Deleted += (sender, e) =>
+            {
+                DirectoryItemDeletedEventArgs args = e;
+                IDirectoryItem deletedItem = e.DeletedItem;
+                Assert.True(deletedItem.IsFolder);
+                Assert.Equal("child", deletedItem.Name);
+                notified = true;
+            };
+
+            rootFolder.RemoveItem("child");
+            Assert.True(notified);
+
+        }
+
+        [Fact]
+        public void Renaming_A_Folder_Raises_An_Event()
+        {
+            var rootFolder = new FolderDirectoryItem("root", null);
+            var childFolder = rootFolder.GetOrAddFolder("child");
+            bool notified = false;
+
+            childFolder.Updated += (sender, e) =>
+            {
+                DirectoryItemUpdatedEventArgs args = e;
+                IDirectoryItem oldItem = e.OldItem;
+                IDirectoryItem newItem = e.NewItem;
+                Assert.Equal("child", oldItem.Name);
+                Assert.Equal("child-renamed", newItem.Name);
+                notified = true;
+            };
+          
+            childFolder.Rename("child-renamed");
+            Assert.True(notified);
+        }
+
+        [Fact]
+        public void Updating_A_Folder_Raises_An_Event()
+        {
+
+          
+            var rootFolder = new FolderDirectoryItem("root", null);
+            var childFolder = rootFolder.GetOrAddFolder("child");
+            bool notified = false;
+
+            childFolder.Updated += (sender, e) =>
+            {
+                DirectoryItemUpdatedEventArgs args = e;
+                IDirectoryItem oldItem = e.OldItem;
+                IDirectoryItem newItem = e.NewItem;
+                Assert.Equal("child", oldItem.Name);
+                Assert.Equal("child-renamed", newItem.Name);
+                notified = true;
+            };
+
+            var newDirItem = new DirectoryFileInfo("child-renamed");
+            childFolder.Update(newDirItem);
+            Assert.True(notified);
+
+        }
+
+
+        [Fact]
+        public void Can_Get_Notified_When_Folder_In_Directory_Is_Deleted()
+        {
+
+            var fileInfo = new StringFileInfo("contents", "foo.txt");
+
+            var rootFolder = new FolderDirectoryItem("root", null);
+            var childFolder = rootFolder.GetOrAddFolder("child");
+            bool notified = false;
+
+            childFolder.Deleted += (sender, e) =>
+            {
+                DirectoryItemDeletedEventArgs args = e;
+                IDirectoryItem deletedItem = e.DeletedItem;
+                Assert.True(deletedItem.IsFolder);
+                Assert.Equal("child", deletedItem.Name);
+                notified = true;
+            };
+
+            rootFolder.RemoveItem("child");
+            Assert.True(notified);
+
+        }
+
 
 
         private IDirectory BuildDirectoryWithTestFiles(string filesInformation)
