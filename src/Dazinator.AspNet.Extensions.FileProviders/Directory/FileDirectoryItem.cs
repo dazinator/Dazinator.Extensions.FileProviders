@@ -85,5 +85,10 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 this.ParentFolder.RemoveItem(this.Name);
             }
         }
+
+        public void Accept(BaseDirectoryVisitor Visitor)
+        {
+            Visitor.Visit(this);
+        }
     }
 }

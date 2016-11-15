@@ -17,40 +17,51 @@ namespace FileProvider.Tests
         }
 
 
+        [Theory]
+        [InlineData("/some/dir/folder/file.txt|/some/dir/folder/file.csv", "/some/dir/folder/file.*", 2)]
+        [InlineData("/file.txt|/folder/file.csv", "/*file.txt", 1)]
+        [InlineData("/file.txt|/folder/file.csv", "*file.csv", 1)]
+        [InlineData("/file.txt|/folder/file.csv", "*file.*", 2)]
         [Fact]
-        public void Is_Notified_When_Folder_Deleted()
+        public void Can_Watch_Files_For_Changes(string files, string pattern, int expectedMatchCount)
         {
             // Arrange
-
-           // var dirItem = new MockDirectoryItem();
-
-           // var fileInfo = new StringFileInfo("contents", "foo.txt");
+            IDirectory directory = BuildDirectoryWithTestFiles(files);
+            var watcher = new DirectoryWatcher(directory);
+            watcher.Watch(pattern);
             
-           // var folderItem = new FolderDirectoryItem("root", null);
-           // var childFolder = folderItem.GetOrAddFolder("child");
-
-           // folderItem.Deleted += (sender, e) =>
-           // {
-           //     DirectoryItemDeletedEventArgs args = e;
-           //     args.
-           // };
-
-           
-           //// childFolder.
-           // var sutDirItem = new FileDirectoryItem(
-           //     fileInfo);
-           // var sut = new DirectoryWatcher(false);
-           // sut.Watch(dirItem);
-
-           // dirItem.
+            
 
 
 
         }
 
-        private void FolderItem_Deleted(object sender, DirectoryItemDeletedEventArgs e)
+        private IDirectory BuildDirectoryWithTestFiles(string filesInformation)
         {
-            throw new NotImplementedException();
+            var directory = new InMemoryDirectory();
+            var filesArray = filesInformation.Split('|');
+            foreach (var file in filesArray)
+            {
+
+                var pathSegments = PathUtils.SplitPathIntoSegments(file);
+
+                var fileName = pathSegments[pathSegments.Length - 1];
+                string dir = string.Empty;
+
+                if (pathSegments.Length > 1)
+                {
+                    for (int i = 0; i < pathSegments.Length - 1; i++)
+                    {
+                        dir = dir + "/" + pathSegments[i];
+                    }
+                }
+
+                var fileContents = Guid.NewGuid();
+                IFileInfo fileInfo = new StringFileInfo(fileContents.ToString(), fileName);
+                directory.AddFile(dir, fileInfo);
+            }
+
+            return directory;
         }
     }
 

@@ -53,7 +53,7 @@ namespace FileProvider.Tests
         }
 
         [Fact]
-        public void Can_Add_Folder_Directory_Structure()
+        public void Can_Nest_Folders()
         {
             // Arrange
             IDirectory directory = new InMemoryDirectory();
@@ -87,23 +87,31 @@ namespace FileProvider.Tests
             Assert.NotNull(grandparentFolder.FileInfo);
             Assert.True(grandparentFolder.IsFolder);
 
-        }
+        }      
 
 
-        [Theory]
-        [InlineData("/some/dir/folder/file.txt|/some/dir/folder/file.csv", "/some/dir/folder/file.*", 2)]
-        [InlineData("/file.txt|/folder/file.csv", "/*file.txt", 1)]
-        [InlineData("/file.txt|/folder/file.csv", "*file.csv", 1)]
-        [InlineData("/file.txt|/folder/file.csv", "*file.*", 2)]
-        public void Can_Search_Directory(string files, string pattern, int expectedMatchCount)
+        [Fact]
+        public void Can_Delete_A_Folder()
         {
-            // Arrange
-            IDirectory directory = BuildDirectoryWithTestFiles(files);
-            var results = directory.Search(pattern).ToList();
-            Assert.Equal(expectedMatchCount, results.Count);
+
+            var rootFolder = new FolderDirectoryItem("root", null);
+            var childFolder = rootFolder.GetOrAddFolder("child");
+            bool notified = false;
+
+            childFolder.Deleted += (sender, e) =>
+            {
+                DirectoryItemDeletedEventArgs args = e;
+                IDirectoryItem deletedItem = e.DeletedItem;
+                Assert.True(deletedItem.IsFolder);
+                Assert.Equal("child", deletedItem.Name);
+                notified = true;
+            };
+
+            childFolder.Delete();           
+            Assert.True(notified);
+
         }
-        
-       
+
         [Fact]
         public void Can_Delete_A_Folder_Containing_Items()
         {
@@ -170,35 +178,16 @@ namespace FileProvider.Tests
             Assert.Null(item);
 
         }
-
-
-        [Fact]
-        public void Deleting_A_Folder_Raises_An_Event()
-        {
-
-            var rootFolder = new FolderDirectoryItem("root", null);
-            var childFolder = rootFolder.GetOrAddFolder("child");
-            bool notified = false;
-
-            childFolder.Deleted += (sender, e) =>
-            {
-                DirectoryItemDeletedEventArgs args = e;
-                IDirectoryItem deletedItem = e.DeletedItem;
-                Assert.True(deletedItem.IsFolder);
-                Assert.Equal("child", deletedItem.Name);
-                notified = true;
-            };
-
-            rootFolder.RemoveItem("child");
-            Assert.True(notified);
-
-        }
+    
 
         [Fact]
-        public void Renaming_A_Folder_Raises_An_Event()
+        public void Can_Rename_A_Folder()
         {
             var rootFolder = new FolderDirectoryItem("root", null);
             var childFolder = rootFolder.GetOrAddFolder("child");
+
+            var fileInfo = new StringFileInfo("contents", "foo.txt");
+            var someOtherFile = childFolder.AddFile(fileInfo);
             bool notified = false;
 
             childFolder.Updated += (sender, e) =>
@@ -213,58 +202,45 @@ namespace FileProvider.Tests
           
             childFolder.Rename("child-renamed");
             Assert.True(notified);
+            Assert.Equal("root/child-renamed/foo.txt", someOtherFile.Path);
+            
+
+
         }
 
         [Fact]
-        public void Updating_A_Folder_Raises_An_Event()
+        public void Can_Add_A_File_To_A_Folder()
         {
-
           
             var rootFolder = new FolderDirectoryItem("root", null);
-            var childFolder = rootFolder.GetOrAddFolder("child");
+          
             bool notified = false;
 
-            childFolder.Updated += (sender, e) =>
+            rootFolder.ItemAdded += (sender, e) =>
             {
-                DirectoryItemUpdatedEventArgs args = e;
-                IDirectoryItem oldItem = e.OldItem;
-                IDirectoryItem newItem = e.NewItem;
-                Assert.Equal("child", oldItem.Name);
-                Assert.Equal("child-renamed", newItem.Name);
+                DirectoryItemAddedEventArgs args = e;              
+                IDirectoryItem newItem = e.NewItem;               
+                Assert.Equal("child", newItem.Name);
                 notified = true;
             };
 
-            var newDirItem = new DirectoryFileInfo("child-renamed");
-            childFolder.Update(newDirItem);
+            var childFolder = rootFolder.GetOrAddFolder("child");          
             Assert.True(notified);
 
         }
 
-
-        [Fact]
-        public void Can_Get_Notified_When_Folder_In_Directory_Is_Deleted()
+        [Theory]
+        [InlineData("/some/dir/folder/file.txt|/some/dir/folder/file.csv", "/some/dir/folder/file.*", 2)]
+        [InlineData("/file.txt|/folder/file.csv", "/*file.txt", 1)]
+        [InlineData("/file.txt|/folder/file.csv", "*file.csv", 1)]
+        [InlineData("/file.txt|/folder/file.csv", "*file.*", 2)]
+        public void Can_Search_Directory(string files, string pattern, int expectedMatchCount)
         {
-
-            var fileInfo = new StringFileInfo("contents", "foo.txt");
-
-            var rootFolder = new FolderDirectoryItem("root", null);
-            var childFolder = rootFolder.GetOrAddFolder("child");
-            bool notified = false;
-
-            childFolder.Deleted += (sender, e) =>
-            {
-                DirectoryItemDeletedEventArgs args = e;
-                IDirectoryItem deletedItem = e.DeletedItem;
-                Assert.True(deletedItem.IsFolder);
-                Assert.Equal("child", deletedItem.Name);
-                notified = true;
-            };
-
-            rootFolder.RemoveItem("child");
-            Assert.True(notified);
-
+            // Arrange
+            IDirectory directory = BuildDirectoryWithTestFiles(files);
+            var results = directory.Search(pattern).ToList();
+            Assert.Equal(expectedMatchCount, results.Count);
         }
-
 
 
         private IDirectory BuildDirectoryWithTestFiles(string filesInformation)

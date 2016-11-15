@@ -18,7 +18,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         public InMemoryFileProvider(IDirectory directory)
         {
             Directory = directory;
-            _dirWatcher = new DirectoryWatcher();
+            _dirWatcher = new DirectoryWatcher(directory);
             _dirWatcher.ItemUpdated += DirectoryWatcher_ItemUpdated;
             _dirWatcher.ItemDeleted += DirectoryWatcher_ItemDeleted;
             _dirWatcher.ItemAdded += DirWatcher_ItemAddedToDirectory;
@@ -74,31 +74,38 @@ namespace Dazinator.AspNet.Extensions.FileProviders
             // if it isn#t it means it is specifying a single file, so we can break after finding the first matching file. 
             bool isComposite = subPath.IsPattern || string.IsNullOrWhiteSpace(subPath.Name);
 
-            var results = Directory.Search(filter);
+
+            _dirWatcher.AddFilter(filter); // now only changes to item in the directory that match the filter will cause events to be raised / us to be notified.
+
+            var resultToken = GetOrAddChangeToken(subPath.ToString(), () => new InMemoryChangeToken());
+
+            // var results = Directory.Search(filter);
 
             IChangeToken resultToken = null;
 
-            foreach (var item in results)
-            {
-                resultToken = GetOrAddChangeToken(item.Path, () => new InMemoryChangeToken());
-                fileTokens.Add(resultToken);
+            //foreach (var item in results)
+            //{
+               
+            //    fileTokens.Add(resultToken);
 
-                // watch this directory item (could be a folder or file) for changes.
-                // and then when they occur, can signal the changetokens for them.
-                _dirWatcher.Watch(item);
+            //    // watch this directory item (could be a folder or file) for changes.
+            //    // and then when they occur, can signal the changetokens for them.
+            //    _dirWatcher.Watch(item);
 
-                if (!isComposite)
-                {
-                    // stop enumerating if single file.
-                    break;
-                }
+               
+
+            //    if (!isComposite)
+            //    {
+            //        // stop enumerating if single file.
+            //        break;
+            //    }
             }
 
-            if (!fileTokens.Any())
-            {
-                // no files matched, return null change token.
-                resultToken = NullChangeToken.Singleton;
-            }
+            //if (!fileTokens.Any())
+            //{
+            //    // no files matched, return null change token.
+            //    resultToken = NullChangeToken.Singleton;
+            //}
 
             if (fileTokens.Count > 1)
             {

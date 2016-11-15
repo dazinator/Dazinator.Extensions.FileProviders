@@ -3,7 +3,7 @@ using Microsoft.Extensions.FileProviders;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
-    public interface IDirectoryItem
+    public interface IDirectoryItem : IVisitable<BaseDirectoryVisitor>
     {
         IFolderDirectoryItem ParentFolder { get; set; }
 

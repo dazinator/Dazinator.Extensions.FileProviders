@@ -111,7 +111,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 }
             }
 
-            
+
             foreach (var item in Items.ToArray()) // We ToArray because Items gets modified during a Delete() call.
             {
                 if (item.Value.IsFolder)
@@ -289,7 +289,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             var existing = Items[name];
 
             // todo: could put in check here for deleting folders with items.. rather than in delete method.
-            
+
             var result = Items.Remove(name);
             if (result)
             {
@@ -354,6 +354,20 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
             return this.Path.Equals(item.Path);
         }
+
+        public void Accept(BaseDirectoryVisitor Visitor)
+        {
+            Visitor.Visit(this);
+
+            // visit children?
+            // allow visitor to decide.
+
+        }
+
+        //public IEnumerable<IDirectoryItem> GetItems()
+        //{
+        //    return this.Items.Values.ToArray();
+        //}
 
 
 

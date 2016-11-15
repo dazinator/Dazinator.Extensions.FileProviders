@@ -138,6 +138,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             folder?.UpdateFile(fileInfo);
         }
 
-
+        public void Accept(BaseDirectoryVisitor Visitor)
+        {
+            this.Root.Accept(Visitor);
+        }
     }
 }

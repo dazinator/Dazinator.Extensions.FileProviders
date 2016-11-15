@@ -15,7 +15,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         IFileDirectoryItem UpdateFile(IFileInfo file);
 
         void Update(IFileInfo file);
-        
+
         /// <summary>
         /// Deletes an empty folder, or a folder and all its contents if recursive is specified.
         /// </summary>
@@ -24,5 +24,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         event EventHandler<DirectoryItemAddedEventArgs> ItemAdded;
 
         bool RemoveItem(string name);
+
+       
     }
 }
