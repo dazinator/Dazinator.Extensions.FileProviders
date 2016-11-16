@@ -6,11 +6,27 @@ using System.Linq;
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
 
+    public class DirectoryWatcherFilterMatchedEventArgs<TDirectoryItemEventArgs> : EventArgs
+    {
+
+
+        public DirectoryWatcherFilterMatchedEventArgs(TDirectoryItemEventArgs args, string[] matchedFilters)
+        {
+            DirectoryItemEventArgs = args;
+            MatchedFilters = matchedFilters;
+        }
+
+        public TDirectoryItemEventArgs DirectoryItemEventArgs { get; set; }
+
+        public string[] MatchedFilters { get; set; }
+
+    }
+
 
     public enum VisitMode
     {
         Register,
-        Unregister       
+        Unregister
     }
 
     public class DirectoryWatcher : BaseDirectoryVisitor
@@ -18,13 +34,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         // private readonly IFolderDirectoryItem _folderItem;
         // private readonly bool _watchNewSubFolders;
 
-        public event EventHandler<DirectoryItemUpdatedEventArgs> ItemUpdated;
-        public event EventHandler<DirectoryItemAddedEventArgs> ItemAdded;
-        public event EventHandler<DirectoryItemDeletedEventArgs> ItemDeleted;
+        public event EventHandler<DirectoryWatcherFilterMatchedEventArgs<DirectoryItemUpdatedEventArgs>> ItemUpdated;
+        public event EventHandler<DirectoryWatcherFilterMatchedEventArgs<DirectoryItemAddedEventArgs>> ItemAdded;
+        public event EventHandler<DirectoryWatcherFilterMatchedEventArgs<DirectoryItemDeletedEventArgs>> ItemDeleted;
 
         //private readonly bool _autoWatchNewSubFolders;
         private ConcurrentDictionary<string, IDirectoryItem> _watchingFolders;
-        private List<string> _Filters;
+        private List<Globbing.Glob> _Filters;
         private VisitMode _visitMode;
         private bool _UnregisterWasSuccessful;
 
@@ -38,10 +54,10 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <param name="autoWatchNewSubFolders">If true, will automatically Watch any new subfolders that happen to be created in any directory currently being watched.</param>
         public DirectoryWatcher(IDirectory directory)
         {
-           // _autoWatchNewSubFolders = autoWatchNewSubFolders;
+            // _autoWatchNewSubFolders = autoWatchNewSubFolders;
             _watchingFolders = new ConcurrentDictionary<string, IDirectoryItem>();
             _directory = directory;
-            _Filters = new List<string>();
+            _Filters = new List<Globbing.Glob>();
             _visitMode = VisitMode.Register;
             _directory.Accept(this); // visit all items in the directory and attach handlers for event notifications.
             // _pattern = pattern;
@@ -58,7 +74,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 case VisitMode.Unregister:
                     _UnregisterWasSuccessful = false;
                     _UnregisterWasSuccessful = Unregister(item);
-                    break;               
+                    break;
             }
         }
 
@@ -76,7 +92,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 case VisitMode.Unregister:
                     _UnregisterWasSuccessful = false;
                     _UnregisterWasSuccessful = Unregister(item);
-                    break;               
+                    break;
             }
 
         }
@@ -236,7 +252,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             e.DeletedItem.Accept(this);
             _visitMode = currentMode;
             OnRaiseItemDeleted(e);
-           
+
         }
 
         /// <summary>
@@ -254,39 +270,67 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         protected virtual void OnRaiseItemAdded(DirectoryItemAddedEventArgs args)
         {
             // TODO: Only raise the event if the item/s matches watch pattern.
+            var matches = GetMatchingFilters(args.NewItem.Path).ToArray();
+            if (matches.Length > 0)
+            {
+                var watcherArgs = new DirectoryWatcherFilterMatchedEventArgs<DirectoryItemAddedEventArgs>(args, matches);
+                EventHandler<DirectoryWatcherFilterMatchedEventArgs<DirectoryItemAddedEventArgs>> handler = ItemAdded;
+                handler?.Invoke(this, watcherArgs);
+            }
 
-           
-            EventHandler<DirectoryItemAddedEventArgs> handler = ItemAdded;
-            handler?.Invoke(this, args);
+
+
+
         }
+
+        private IEnumerable<string> GetMatchingFilters(string path)
+        {
+            foreach (var filter in _Filters)
+            {
+                if (filter.IsMatch(path))
+                {
+                    yield return filter.Pattern;
+                }
+            }
+        }
+
+
+
         protected virtual void OnRaiseItemUpdated(DirectoryItemUpdatedEventArgs args)
         {
-            // TODO: Only raise the event if the item/s matches watch pattern.
-           
-            EventHandler<DirectoryItemUpdatedEventArgs> handler = ItemUpdated;
-            handler?.Invoke(this, args);
+            // Only raise the event if the old or new item (i.e file or folder could have been renamed)
+            // matches a pattern.
+            var newItemMatches = GetMatchingFilters(args.NewItem.Path).ToArray();
+            var oldItemMatches = GetMatchingFilters(args.OldItem.Path).ToArray();
+            var unionMatches = newItemMatches.Union(oldItemMatches).ToArray();
+            if (unionMatches.Length > 0)
+            {
+                var watcherArgs = new DirectoryWatcherFilterMatchedEventArgs<DirectoryItemUpdatedEventArgs>(args, unionMatches);
+                EventHandler<DirectoryWatcherFilterMatchedEventArgs<DirectoryItemUpdatedEventArgs>> handler = ItemUpdated;
+                handler?.Invoke(this, watcherArgs);
+            };
 
-            ItemUpdated?.Invoke(this, args);
+
         }
         protected virtual void OnRaiseItemDeleted(DirectoryItemDeletedEventArgs args)
         {
-            // TODO: Only raise the event if the item/s matches watch pattern.
-
-            // Make a temporary copy of the event to avoid possibility of
-            // a race condition if the last subscriber unsubscribes
-            // immediately after the null check and before the event is raised.
-            EventHandler<DirectoryItemDeletedEventArgs> handler = ItemDeleted;
-            ItemDeleted?.Invoke(this, args);
+            // Only raise the event if the item/s matches watch pattern.      
+            var matches = GetMatchingFilters(args.DeletedItem.Path).ToArray();
+            if (matches.Length > 0)
+            {
+                var watcherArgs = new DirectoryWatcherFilterMatchedEventArgs<DirectoryItemDeletedEventArgs>(args, matches);
+                EventHandler<DirectoryWatcherFilterMatchedEventArgs<DirectoryItemDeletedEventArgs>> handler = ItemDeleted;
+                handler?.Invoke(this, watcherArgs);
+            };
         }
-      
+
         /// <summary>
         /// Adds a filter so that only if an item in the directory has a path that matches the filter, will an event be raised when it is modified.
         /// </summary>
         /// <param name="pattern"></param>
         public void AddFilter(string pattern)
         {
-            _Filters.Add(pattern);
-
+            _Filters.Add(new Globbing.Glob(pattern));
         }
 
     }

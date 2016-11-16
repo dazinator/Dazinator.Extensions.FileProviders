@@ -9,60 +9,123 @@ namespace FileProvider.Tests
     public class DirectoryWatcherTests
     {
 
-
         public DirectoryWatcherTests()
         {
             
 
         }
-
-
-        [Theory]
-        [InlineData("/some/dir/folder/file.txt|/some/dir/folder/file.csv", "/some/dir/folder/file.*", 2)]
-        [InlineData("/file.txt|/folder/file.csv", "/*file.txt", 1)]
-        [InlineData("/file.txt|/folder/file.csv", "*file.csv", 1)]
-        [InlineData("/file.txt|/folder/file.csv", "*file.*", 2)]
+      
+             
         [Fact]
-        public void Can_Watch_Files_For_Changes(string files, string pattern, int expectedMatchCount)
+        public void Can_Watch_Directory_For_New_Items()
         {
             // Arrange
-            IDirectory directory = BuildDirectoryWithTestFiles(files);
+            IDirectory directory = new InMemoryDirectory();
             var watcher = new DirectoryWatcher(directory);
-            watcher.Watch(pattern);
-            
-            
 
+            var watchPattern = "/some/dir/folder/newfile.*";
+            watcher.AddFilter(watchPattern);
 
+            //
+            bool notified = false;
 
-        }
-
-        private IDirectory BuildDirectoryWithTestFiles(string filesInformation)
-        {
-            var directory = new InMemoryDirectory();
-            var filesArray = filesInformation.Split('|');
-            foreach (var file in filesArray)
+            watcher.ItemAdded += (sender, e) =>
             {
+                DirectoryItemAddedEventArgs args = e.DirectoryItemEventArgs;
+                var matchedFilters = e.MatchedFilters;
+                IDirectoryItem newItem = args.NewItem;
+                Assert.Equal("newfile.txt", newItem.Name);
+                notified = true;
+            };
 
-                var pathSegments = PathUtils.SplitPathIntoSegments(file);
 
-                var fileName = pathSegments[pathSegments.Length - 1];
-                string dir = string.Empty;
+            directory.AddFile("/some/dir/folder/", new StringFileInfo("hi", "newfile.txt"));
+            Assert.True(notified);
 
-                if (pathSegments.Length > 1)
-                {
-                    for (int i = 0; i < pathSegments.Length - 1; i++)
-                    {
-                        dir = dir + "/" + pathSegments[i];
-                    }
-                }
+            notified = false;
+            directory.AddFile("/some/dir/folder/", new StringFileInfo("shouldnt trigger", "anotherfile.txt"));
+            Assert.False(notified);
 
-                var fileContents = Guid.NewGuid();
-                IFileInfo fileInfo = new StringFileInfo(fileContents.ToString(), fileName);
-                directory.AddFile(dir, fileInfo);
-            }
 
-            return directory;
+
         }
+
+        [Fact]
+        public void Can_Watch_Directory_For_Updated_Items()
+        {
+            // Arrange
+            IDirectory directory = new InMemoryDirectory();
+            directory.AddFile("/some/dir/folder/", new StringFileInfo("hi", "newfile.txt"));
+
+            var watcher = new DirectoryWatcher(directory);
+            var watchPattern = "/some/dir/folder/new*.txt";
+            watcher.AddFilter(watchPattern);
+
+            //
+            bool notified = false;
+
+            watcher.ItemUpdated += (sender, e) =>
+            {
+                DirectoryItemUpdatedEventArgs args = e.DirectoryItemEventArgs;
+                var matchedFilters = e.MatchedFilters;
+                Assert.Equal("newfile.txt", args.OldItem.Name);
+                Assert.Equal("newfile.csv", args.NewItem.Name);               
+                notified = true;
+            };
+
+            // now update the file
+            var existingItem = directory.GetFile("/some/dir/folder/newfile.txt");
+            existingItem.Update(new StringFileInfo("changed", "newfile.csv"));
+            Assert.True(notified);
+
+            notified = false;
+            existingItem.Update(new StringFileInfo("changed again", "newfile.csv"));
+            // second update shouldnt trigger as our watch pattern is only watching newfile*.txt files.
+            Assert.False(notified);
+
+
+
+        }
+
+        [Fact]
+        public void Can_Watch_Directory_For_Deleted_Items()
+        {
+            // Arrange
+            IDirectory directory = new InMemoryDirectory();
+            directory.AddFile("/some/dir/folder/", new StringFileInfo("hi", "foo.txt"));
+            directory.AddFile("/some/dir/folder/", new StringFileInfo("hi", "bar.txt"));
+
+            var watcher = new DirectoryWatcher(directory);
+            var watchPattern = "/some/dir/folder/foo.txt";
+            watcher.AddFilter(watchPattern);
+
+            //
+            bool notified = false;
+
+            watcher.ItemDeleted += (sender, e) =>
+            {
+                DirectoryItemDeletedEventArgs args = e.DirectoryItemEventArgs;
+                var matchedFilters = e.MatchedFilters;
+                IDirectoryItem deletedItem = args.DeletedItem;
+                Assert.Equal("foo.txt", deletedItem.Name);
+                notified = true;
+            };
+
+
+            var fooFile = directory.GetFile("/some/dir/folder/foo.txt");
+            fooFile.Delete();
+            Assert.True(notified);
+
+            notified = false;
+            var barFile = directory.GetFile("/some/dir/folder/bar.txt");
+            barFile.Delete();
+            Assert.False(notified);
+
+
+
+        }
+
+
     }
 
    
