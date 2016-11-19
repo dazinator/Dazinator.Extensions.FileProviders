@@ -1,10 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using Microsoft.Extensions.FileProviders;
 
-namespace Dazinator.AspNet.Extensions.FileProviders.Directory
+namespace Dazinator.AspNet.Extensions.FileProviders
 {
-    public class DirectoryFileInfo : IFileInfo
+
+  public class DirectoryFileInfo : IFileInfo
     {
         public DirectoryFileInfo(string name)
         {

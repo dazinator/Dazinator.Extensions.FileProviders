@@ -30,13 +30,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         public override bool IsFolder { get { return false; } }
 
-        //public IDirectoryItem GetChildDirectoryItem(string name)
-        //{
-        //    // files in a directory cannot have child items.
-        //    return null;
-        //}
-
-        public void Update(IFileInfo newFileInfo)
+        public override void Update(IFileInfo newFileInfo)
         {
             // take a snapshot of current directory item with the old file.
             var oldItem = new FileDirectoryItem(this.FileInfo, this.ParentFolder, false);
@@ -46,9 +40,17 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             OnRaiseItemUpdated(oldItem);
         }
 
+        //public IDirectoryItem GetChildDirectoryItem(string name)
+        //{
+        //    // files in a directory cannot have child items.
+        //    return null;
+        //}
+
         public override void Accept(BaseDirectoryVisitor Visitor)
         {
             Visitor.Visit(this);
         }
+
+      
     }
 }

@@ -82,9 +82,55 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         public void Rename(string newName)
         {
-            var newDirItem = new DirectoryFileInfo(newName);
-            Update(newDirItem);
+            if (this.ParentFolder != null)
+            {
+                if (FileInfo.Name != newName)
+                {
+                    this.ParentFolder.RenameItem(this, newName);
+                    return;
+                    //  OnRenamed(oldItem.Name, newFileInfo.Name);
+                }
+
+                // Update(newDirItem);
+            }
         }
+
+        public void RenameItem(IDirectoryItem existingItem, string newName)
+        {
+            if (Items.ContainsKey(newName))
+            {
+                throw new InvalidOperationException("Cannot rename item as an item already exists with the same name.");
+            }
+
+            if (existingItem != null)
+            {
+                Items.Remove(existingItem.Name);
+            }
+            Items[newName] = existingItem;
+            existingItem.OnRenamed(newName);
+
+        }
+
+        //public void OnRenamed(string newName)
+        //{
+        //    var newDirItem = new DirectoryFileInfo(newName);
+        //    Update(newDirItem);
+        //}
+
+        public override void Update(IFileInfo newFileInfo)
+        {
+            var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
+            FileInfo = newFileInfo;
+            OnRaiseItemUpdated(oldItem);
+        }
+
+
+        //public void OnUpdated(IFileInfo newFileInfo)
+        //{
+        //    var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
+        //    FileInfo = newFileInfo;
+        //    OnRaiseItemUpdated(oldItem);
+        //}
 
         /// <summary>
         /// Deletes an empty folder.
@@ -136,16 +182,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 // root folder
                 OnRemoved();
             }
-        }
-
-        public void Update(IFileInfo newFileInfo)
-        {
-            // take a snapshot of current directory item with the old file.
-            var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
-            // now change the file to the new file on this item.
-            FileInfo = newFileInfo;
-
-            OnRaiseItemUpdated(oldItem);
         }
 
         private IFileDirectoryItem GetFileItem(string path)
@@ -299,7 +335,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         #endregion
 
- 
+
 
     }
 }

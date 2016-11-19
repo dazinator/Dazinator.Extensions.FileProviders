@@ -87,7 +87,7 @@ namespace FileProvider.Tests
             Assert.NotNull(grandparentFolder.FileInfo);
             Assert.True(grandparentFolder.IsFolder);
 
-        }      
+        }
 
 
         [Fact]
@@ -107,7 +107,7 @@ namespace FileProvider.Tests
                 notified = true;
             };
 
-            childFolder.Delete();           
+            childFolder.Delete();
             Assert.True(notified);
 
         }
@@ -178,7 +178,7 @@ namespace FileProvider.Tests
             Assert.Null(item);
 
         }
-    
+
 
         [Fact]
         public void Can_Rename_A_Folder()
@@ -199,11 +199,11 @@ namespace FileProvider.Tests
                 Assert.Equal("child-renamed", newItem.Name);
                 notified = true;
             };
-          
+
             childFolder.Rename("child-renamed");
             Assert.True(notified);
             Assert.Equal("root/child-renamed/foo.txt", someOtherFile.Path);
-            
+
 
 
         }
@@ -211,17 +211,27 @@ namespace FileProvider.Tests
         [Fact]
         public void Can_Rename_A_Folder_With_Child_Items()
         {
+
+            // arrange
+            // build a directory /root/child/grandchild
             var rootFolder = new FolderDirectoryItem("root", null);
             var childFolder = rootFolder.GetOrAddFolder("child");
             var grandChildFolder = childFolder.GetOrAddFolder("grandchild");
 
+            // add a file /root/child/foo.txt
             var fileInfo = new StringFileInfo("contents", "foo.txt");
             var someOtherFile = childFolder.AddFile(fileInfo);
-            
+
+            // add a file /root/child/grandchild/bar.txt
             var barFile = grandChildFolder.AddFile(new StringFileInfo("should trigger", "bar.txt"));
+
+            // Subscribe to event handlers as we want to test if we are notified appropriately when 
+            // a folder is renamed.
             bool notified = false;
             bool fileNotified = false;
 
+            // We are going to rename this folder, so we should see if we get notified that it is
+            // updated.
             grandChildFolder.Updated += (sender, e) =>
             {
                 DirectoryItemUpdatedEventArgs args = e;
@@ -232,6 +242,8 @@ namespace FileProvider.Tests
                 notified = true;
             };
 
+            // We are going to rename the folder which this file lives in, which means this files
+            // path will have changed. We should register to see if we get notified that it was updated.
             barFile.Updated += (sender, e) =>
             {
                 DirectoryItemUpdatedEventArgs args = e;
@@ -239,15 +251,14 @@ namespace FileProvider.Tests
                 IDirectoryItem newItem = e.NewItem;
                 Assert.Equal("bar.txt", oldItem.Name);
                 Assert.Equal("bar.txt", newItem.Name);
+                Assert.Equal("root/child/grandchild/bar.txt", oldItem.Path);
+                Assert.Equal("root/child/grandchild-renamed/bar.txt", newItem.Path);
                 fileNotified = true;
             };
 
             grandChildFolder.Rename("grandchild-renamed");
             Assert.True(notified);
             Assert.True(fileNotified);
-            Assert.Equal("root/child/grandchild-renamed/bar.txt", barFile.Path);
-
-
 
         }
 
@@ -255,20 +266,20 @@ namespace FileProvider.Tests
         [Fact]
         public void Can_Add_A_File_To_A_Folder()
         {
-          
+
             var rootFolder = new FolderDirectoryItem("root", null);
-          
+
             bool notified = false;
 
             rootFolder.ItemAdded += (sender, e) =>
             {
-                DirectoryItemAddedEventArgs args = e;              
-                IDirectoryItem newItem = e.NewItem;               
+                DirectoryItemAddedEventArgs args = e;
+                IDirectoryItem newItem = e.NewItem;
                 Assert.Equal("child", newItem.Name);
                 notified = true;
             };
 
-            var childFolder = rootFolder.GetOrAddFolder("child");          
+            var childFolder = rootFolder.GetOrAddFolder("child");
             Assert.True(notified);
 
         }

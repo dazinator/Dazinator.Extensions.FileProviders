@@ -24,8 +24,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// Deletes the item from the directory.
         /// </summary>
         void Delete();
-
-
-
+        void OnRenamed(string newName);
     }
 }

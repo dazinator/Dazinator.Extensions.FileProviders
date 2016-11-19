@@ -21,7 +21,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         private void EnsureParentEvents(IFolderDirectoryItem parent, bool listen)
         {
-          
+
 
             if (_listenToParent)
             {
@@ -39,7 +39,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                     parent.Updated -= OnParentUpdated;
                 }
             }
-           
+
         }
 
         protected abstract void OnParentUpdated(object sender, DirectoryItemUpdatedEventArgs e);
@@ -153,6 +153,15 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
             return this.Path.Equals(item.Path);
         }
+
+        public void OnRenamed(string newName)
+        {
+            var newDirItem = new ModifiedFileInfo(this.FileInfo);
+            newDirItem.Name = newName;
+            Update(newDirItem);
+        }
+
+        public abstract void Update(IFileInfo newFileInfo);
 
     }
 }

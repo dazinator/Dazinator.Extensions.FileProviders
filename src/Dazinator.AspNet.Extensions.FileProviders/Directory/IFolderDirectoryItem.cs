@@ -18,6 +18,8 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         void Rename(string newName);
 
+        void RenameItem(IDirectoryItem existingItem, string newname);
+
         IFileDirectoryItem AddFile(IFileInfo file);
 
         IFileDirectoryItem UpdateFile(IFileInfo file);
@@ -32,7 +34,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         event EventHandler<DirectoryItemAddedEventArgs> ItemAdded;
 
         bool RemoveItem(string name);
-
        
     }
 }
