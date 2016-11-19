@@ -6,32 +6,44 @@ using Microsoft.Extensions.FileProviders;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
-    public class FolderDirectoryItem : IFolderDirectoryItem
+    public class FolderDirectoryItem : BaseDirectoryItem, IFolderDirectoryItem
     {
-        public FolderDirectoryItem(string name, IFolderDirectoryItem parentFolder) : this(new DirectoryFileInfo(name), parentFolder)
+
+        public event EventHandler<DirectoryItemAddedEventArgs> ItemAdded;
+
+        public FolderDirectoryItem(string name, IFolderDirectoryItem parentFolder)
+            : this(new DirectoryFileInfo(name), parentFolder)
         {
 
         }
 
         public FolderDirectoryItem(IFileInfo directoryFileInfo, IFolderDirectoryItem parentFolder)
+            : this(directoryFileInfo, parentFolder, true)
         {
-            FileInfo = directoryFileInfo;
-            ParentFolder = parentFolder;
             Items = new Dictionary<string, IDirectoryItem>();
         }
 
+        protected FolderDirectoryItem(IFileInfo fileInfo, IFolderDirectoryItem parentFolder, bool listenToParent) : base(fileInfo, parentFolder, listenToParent)
+        {
+
+        }
+
+        protected override void OnParentUpdated(object sender, DirectoryItemUpdatedEventArgs e)
+        {
+            // If the parent path changes (i.e folder rename?), 
+            // or its existence changes, it effects us so we need to notify subscribers we have been affected!
+            if ((e.OldItem.Path != e.NewItem.Path))
+            {
+                var oldItem = new FolderDirectoryItem(this.FileInfo, e.OldItem as IFolderDirectoryItem, false);
+                OnRaiseItemUpdated(oldItem);
+            }
+        }
+
         #region IFolderDirectoryItem
-        public IFolderDirectoryItem ParentFolder { get; set; }
 
         public Dictionary<string, IDirectoryItem> Items { get; set; }
 
-        public string Path => ParentFolder == null ? Name : ParentFolder.Path + "/" + Name;
-
-        public string Name => FileInfo.Name;
-
-        public bool IsFolder => true;
-
-        public IFileInfo FileInfo { get; private set; }
+        public override bool IsFolder { get { return true; } }
 
         /// <summary>
         /// Navigates to a folder within the current directory, and creates the folder if it doesn't already exist.
@@ -78,23 +90,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// Deletes an empty folder.
         /// </summary>
         /// <param name="recursive"></param>
-        public void Delete()
+        public override void Delete()
         {
-            if (Items != null && Items.Any())
-            {
-                throw new InvalidOperationException("Cannot delete a non empty folder, either delete the contents / items in the folder first, or user a recursive delete.");
-            }
-
-            //the parent calls on deleted once the child is removed.
-            if (this.ParentFolder != null)
-            {
-                this.ParentFolder.RemoveItem(this.Name);
-            }
-            else
-            {
-                // root folder
-                OnDeleted();
-            }
+            Delete(false);
         }
 
         /// <summary>
@@ -136,35 +134,18 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             else
             {
                 // root folder
-                OnDeleted();
+                OnRemoved();
             }
         }
 
         public void Update(IFileInfo newFileInfo)
         {
             // take a snapshot of current directory item with the old file.
-            var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder);
+            var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
             // now change the file to the new file on this item.
             FileInfo = newFileInfo;
-            // now signal the file has changed.
+
             OnRaiseItemUpdated(oldItem);
-        }
-
-        private void OnRaiseItemUpdated(FolderDirectoryItem oldItem)
-        {
-            // Make a temporary copy of the event to avoid possibility of
-            // a race condition if the last subscriber unsubscribes
-            // immediately after the null check and before the event is raised.
-            EventHandler<DirectoryItemUpdatedEventArgs> handler = Updated;
-
-            // Event will be null if there are no subscribers
-            if (handler != null)
-            {
-                var args = new DirectoryItemUpdatedEventArgs(oldItem, this);
-
-                // Use the () operator to raise the event.
-                handler(this, args);
-            }
         }
 
         private IFileDirectoryItem GetFileItem(string path)
@@ -193,28 +174,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             return null;
 
         }
-
-        public event EventHandler<DirectoryItemAddedEventArgs> ItemAdded;
-        public event EventHandler<DirectoryItemUpdatedEventArgs> Updated;
-        public event EventHandler<DirectoryItemDeletedEventArgs> Deleted;
-
-        // public event EventHandler<DirectoryItemDeletedEventArgs> ItemDeleted;
-
-        #endregion
-
-        #region IEnumerable
-
-        public IEnumerator<IDirectoryItem> GetEnumerator()
-        {
-            return Items.Values.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return Items.Values.GetEnumerator();
-        }
-
-        #endregion
 
         /// <summary>
         /// Returns the existing item from the current folder, based on its name, and if the item doesn't
@@ -293,7 +252,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             var result = Items.Remove(name);
             if (result)
             {
-                existing.OnDeleted();
+                existing.OnRemoved();
             }
             return result;
         }
@@ -315,47 +274,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             }
         }
 
-        public void OnDeleted()
-        {
-            FileInfo = new NotFoundFileInfo(this.FileInfo.Name);
-            OnRaiseItemDeleted();
-        }
-
-        protected virtual void OnRaiseItemDeleted()
-        {
-            // Make a temporary copy of the event to avoid possibility of
-            // a race condition if the last subscriber unsubscribes
-            // immediately after the null check and before the event is raised.
-            EventHandler<DirectoryItemDeletedEventArgs> handler = Deleted;
-
-            // Event will be null if there are no subscribers
-            if (handler != null)
-            {
-                var args = new DirectoryItemDeletedEventArgs(this);
-
-                // Use the () operator to raise the event.
-                handler(this, args);
-            }
-        }
-
-        public override int GetHashCode()
-        {
-            return this.Path.GetHashCode();
-        }
-
-        public override bool Equals(object obj)
-        {
-            var item = obj as IDirectoryItem;
-
-            if (item == null)
-            {
-                return false;
-            }
-
-            return this.Path.Equals(item.Path);
-        }
-
-        public void Accept(BaseDirectoryVisitor Visitor)
+        public override void Accept(BaseDirectoryVisitor Visitor)
         {
             Visitor.Visit(this);
 
@@ -364,31 +283,23 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         }
 
-        //public IEnumerable<IDirectoryItem> GetItems()
-        //{
-        //    return this.Items.Values.ToArray();
-        //}
+        #endregion
 
+        #region IEnumerable
 
+        public IEnumerator<IDirectoryItem> GetEnumerator()
+        {
+            return Items.Values.GetEnumerator();
+        }
 
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return Items.Values.GetEnumerator();
+        }
 
+        #endregion
 
-        //protected virtual void OnRaiseItemUpdated(IDirectoryItem oldItem, IDirectoryItem newItem)
-        //{
-        //    // Make a temporary copy of the event to avoid possibility of
-        //    // a race condition if the last subscriber unsubscribes
-        //    // immediately after the null check and before the event is raised.
-        //    EventHandler<DirectoryItemUpdatedEventArgs> handler = ItemUpdated;
-
-        //    // Event will be null if there are no subscribers
-        //    if (handler != null)
-        //    {
-        //        var args = new DirectoryItemUpdatedEventArgs(oldItem, newItem);
-
-        //        // Use the () operator to raise the event.
-        //        handler(this, args);
-        //    }
-        //}
+ 
 
     }
 }

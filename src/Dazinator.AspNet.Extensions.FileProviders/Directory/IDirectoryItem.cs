@@ -11,13 +11,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         bool IsFolder { get; }
 
-        /// <summary>
-        /// returns the next item from the directory based on its name.
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        IDirectoryItem GetChildDirectoryItem(string name);
-
         IFileInfo FileInfo { get; }
 
         string Path { get; }
@@ -25,7 +18,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         event EventHandler<DirectoryItemUpdatedEventArgs> Updated;
         event EventHandler<DirectoryItemDeletedEventArgs> Deleted;
 
-        void OnDeleted();
+        void OnRemoved();
 
         /// <summary>
         /// Deletes the item from the directory.

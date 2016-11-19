@@ -209,6 +209,50 @@ namespace FileProvider.Tests
         }
 
         [Fact]
+        public void Can_Rename_A_Folder_With_Child_Items()
+        {
+            var rootFolder = new FolderDirectoryItem("root", null);
+            var childFolder = rootFolder.GetOrAddFolder("child");
+            var grandChildFolder = childFolder.GetOrAddFolder("grandchild");
+
+            var fileInfo = new StringFileInfo("contents", "foo.txt");
+            var someOtherFile = childFolder.AddFile(fileInfo);
+            
+            var barFile = grandChildFolder.AddFile(new StringFileInfo("should trigger", "bar.txt"));
+            bool notified = false;
+            bool fileNotified = false;
+
+            grandChildFolder.Updated += (sender, e) =>
+            {
+                DirectoryItemUpdatedEventArgs args = e;
+                IDirectoryItem oldItem = e.OldItem;
+                IDirectoryItem newItem = e.NewItem;
+                Assert.Equal("grandchild", oldItem.Name);
+                Assert.Equal("grandchild-renamed", newItem.Name);
+                notified = true;
+            };
+
+            barFile.Updated += (sender, e) =>
+            {
+                DirectoryItemUpdatedEventArgs args = e;
+                IDirectoryItem oldItem = e.OldItem;
+                IDirectoryItem newItem = e.NewItem;
+                Assert.Equal("bar.txt", oldItem.Name);
+                Assert.Equal("bar.txt", newItem.Name);
+                fileNotified = true;
+            };
+
+            grandChildFolder.Rename("grandchild-renamed");
+            Assert.True(notified);
+            Assert.True(fileNotified);
+            Assert.Equal("root/child/grandchild-renamed/bar.txt", barFile.Path);
+
+
+
+        }
+
+
+        [Fact]
         public void Can_Add_A_File_To_A_Folder()
         {
           

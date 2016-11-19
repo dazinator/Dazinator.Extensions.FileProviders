@@ -3,90 +3,50 @@ using Microsoft.Extensions.FileProviders;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
-    public class FileDirectoryItem : IFileDirectoryItem
+    public class FileDirectoryItem : BaseDirectoryItem, IFileDirectoryItem
     {
-        public FileDirectoryItem(IFileInfo fileInfo, IFolderDirectoryItem parentFolder)
+
+        public FileDirectoryItem(IFileInfo fileInfo, IFolderDirectoryItem parentFolder) : this(fileInfo, parentFolder, true)
         {
-            FileInfo = fileInfo;
-            ParentFolder = parentFolder;
+            
         }
 
-        public IFileInfo FileInfo { get; private set; }
-
-        public string Path => ParentFolder?.Path + "/" + Name;
-        public bool IsFolder => false;
-        public IDirectoryItem GetChildDirectoryItem(string name)
+        protected FileDirectoryItem(IFileInfo fileInfo, IFolderDirectoryItem parentFolder, bool listenToParent) : base(fileInfo, parentFolder, listenToParent)
         {
-            // files in a directory cannot have child items.
-            return null;
+
         }
 
-        public string Name => FileInfo.Name;
 
-        public IFolderDirectoryItem ParentFolder { get; set; }
+        protected override void OnParentUpdated(object sender, DirectoryItemUpdatedEventArgs e)
+        {
+            // If the parent path changes (i.e folder rename?), 
+            // or its existence changes, it effects us so we need to notify subscribers we have been affected!
+            if ((e.OldItem.Path != e.NewItem.Path))
+            {
+                var oldItem = new FileDirectoryItem(this.FileInfo, e.OldItem as IFolderDirectoryItem, false);
+                OnRaiseItemUpdated(oldItem);
+            }
+        }
 
-        public event EventHandler<DirectoryItemUpdatedEventArgs> Updated;
-        public event EventHandler<DirectoryItemDeletedEventArgs> Deleted;
-        
+        public override bool IsFolder { get { return false; } }
+
+        //public IDirectoryItem GetChildDirectoryItem(string name)
+        //{
+        //    // files in a directory cannot have child items.
+        //    return null;
+        //}
+
         public void Update(IFileInfo newFileInfo)
         {
             // take a snapshot of current directory item with the old file.
-            var oldItem = new FileDirectoryItem(this.FileInfo, this.ParentFolder);
+            var oldItem = new FileDirectoryItem(this.FileInfo, this.ParentFolder, false);
             // now change the file to the new file on this item.
             FileInfo = newFileInfo;
             // now signal the file has changed.
             OnRaiseItemUpdated(oldItem);
         }
 
-        public void OnDeleted()
-        {
-            FileInfo = new NotFoundFileInfo(this.FileInfo.Name);
-            OnRaiseItemDeleted();
-        }
-
-        protected virtual void OnRaiseItemDeleted()
-        {
-            // Make a temporary copy of the event to avoid possibility of
-            // a race condition if the last subscriber unsubscribes
-            // immediately after the null check and before the event is raised.
-            EventHandler<DirectoryItemDeletedEventArgs> handler = Deleted;
-
-            // Event will be null if there are no subscribers
-            if (handler != null)
-            {
-                var args = new DirectoryItemDeletedEventArgs(this);
-
-                // Use the () operator to raise the event.
-                handler(this, args);
-            }
-        }
-
-        protected virtual void OnRaiseItemUpdated(IDirectoryItem oldItem)
-        {
-            // Make a temporary copy of the event to avoid possibility of
-            // a race condition if the last subscriber unsubscribes
-            // immediately after the null check and before the event is raised.
-            EventHandler<DirectoryItemUpdatedEventArgs> handler = Updated;
-
-            // Event will be null if there are no subscribers
-            if (handler != null)
-            {
-                var args = new DirectoryItemUpdatedEventArgs(oldItem, this);
-
-                // Use the () operator to raise the event.
-                handler(this, args);
-            }
-        }
-
-        public void Delete()
-        {
-            if (this.ParentFolder != null)
-            {
-                this.ParentFolder.RemoveItem(this.Name);
-            }
-        }
-
-        public void Accept(BaseDirectoryVisitor Visitor)
+        public override void Accept(BaseDirectoryVisitor Visitor)
         {
             Visitor.Visit(this);
         }

@@ -4,6 +4,7 @@ using Dazinator.AspNet.Extensions.FileProviders.Globbing;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
+
     public class GlobPatternEnumerableDirectoryItems : IEnumerable<IDirectoryItem>
     {
         private readonly IFolderDirectoryItem _rootFolder;

@@ -95,7 +95,17 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
             foreach (var segment in segments)
             {
-                currentDirectoryItem = currentDirectoryItem.GetChildDirectoryItem(segment);
+                if (currentDirectoryItem.IsFolder)
+                {
+                    var folderItem = currentDirectoryItem as IFolderDirectoryItem;
+                    currentDirectoryItem = folderItem.GetChildDirectoryItem(segment);
+                }
+                else
+                {
+                    // the path of the item leads to a non existing directory.
+                    return null;
+                }
+
 
                 if (currentDirectoryItem == null)
                 {

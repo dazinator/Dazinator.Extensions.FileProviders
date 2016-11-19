@@ -9,19 +9,23 @@ using Microsoft.Extensions.Primitives;
 
 namespace Dazinator.AspNet.Extensions.FileProviders
 {
-    public class InMemoryFileProvider : IFileProvider
+    public class InMemoryFileProvider : IFileProvider, IDisposable
     {
 
         private readonly ConcurrentDictionary<string, IChangeToken> _matchInfoCache = new ConcurrentDictionary<string, IChangeToken>();
-        private readonly DirectoryWatcher _dirWatcher;
+        private readonly Lazy<DirectoryWatcher> _dirWatcher;
+
+        public InMemoryFileProvider() : this(new InMemoryDirectory())
+        {
+        }
 
         public InMemoryFileProvider(IDirectory directory)
         {
             Directory = directory;
-            _dirWatcher = new DirectoryWatcher(directory);
-            _dirWatcher.ItemAdded += _dirWatcher_ItemAdded;
-            _dirWatcher.ItemDeleted += _dirWatcher_ItemDeleted;
-            _dirWatcher.ItemUpdated += _dirWatcher_ItemUpdated;
+            _dirWatcher = new Lazy<DirectoryWatcher>(() =>
+            {
+                return new DirectoryWatcher(Directory);
+            });
         }
 
         private void _dirWatcher_ItemUpdated(object sender, DirectoryWatcherFilterMatchedEventArgs<DirectoryItemUpdatedEventArgs> e)
@@ -79,6 +83,14 @@ namespace Dazinator.AspNet.Extensions.FileProviders
             }
         }
 
+        public DirectoryWatcher DirectoryWatcher {
+            get
+            {
+                // DirectoryWatcher is created on first access here.
+                return _dirWatcher.Value;
+            }
+        }
+
         public IDirectory Directory { get; set; }
 
         public IFileInfo GetFileInfo(string subpath)
@@ -105,7 +117,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders
 
         public IChangeToken Watch(string filter)
         {
-
             if (filter == null)
             {
                 return NullChangeToken.Singleton;
@@ -120,12 +131,12 @@ namespace Dazinator.AspNet.Extensions.FileProviders
                 return existing;
             }
 
-            _dirWatcher.AddFilter(subPathString); // now only changes to item in the directory that match the filter will cause events to be raised / us to be notified.
+            DirectoryWatcher.AddFilter(subPathString); // now only changes to item in the directory that match the filter will cause events to be raised / us to be notified.
 
             var resultToken = GetOrAddChangeToken(subPathString, () => new InMemoryChangeToken());
             return resultToken;
 
-        }    
+        }
 
         private IChangeToken GetOrAddChangeToken(string key, Func<IChangeToken> tokenFactory)
         {
@@ -143,6 +154,16 @@ namespace Dazinator.AspNet.Extensions.FileProviders
             return fileToken;
         }
 
-
+        /// <summary>
+        /// Disposes the provider. Change tokens may not trigger after the provider is disposed.
+        /// </summary>
+        public void Dispose()
+        {
+            if (_dirWatcher.IsValueCreated)
+            {
+                _dirWatcher.Value.Dispose();
+            }
+           
+        }
     }
 }

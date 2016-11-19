@@ -29,7 +29,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         Unregister
     }
 
-    public class DirectoryWatcher : BaseDirectoryVisitor
+    public class DirectoryWatcher : BaseDirectoryVisitor, IDisposable
     {
         // private readonly IFolderDirectoryItem _folderItem;
         // private readonly bool _watchNewSubFolders;
@@ -218,12 +218,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         }
 
-        //private void Folder_Updated(object sender, DirectoryItemUpdatedEventArgs e)
-        //{
-        //    // if the folder matches 
-        //    OnRaiseItemUpdated(e);
-        //}
-
         /// <summary>
         /// Handles an item being added to a folder that is being watched.
         /// </summary>
@@ -294,8 +288,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             }
         }
 
-
-
         protected virtual void OnRaiseItemUpdated(DirectoryItemUpdatedEventArgs args)
         {
             // Only raise the event if the old or new item (i.e file or folder could have been renamed)
@@ -333,5 +325,10 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             _Filters.Add(new Globbing.Glob(pattern));
         }
 
+        public void Dispose()
+        {
+            // unregisters all event handlers.
+            UnregisterAll();
+        }
     }
 }

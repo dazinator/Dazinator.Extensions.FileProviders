@@ -6,6 +6,14 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
     public interface IFolderDirectoryItem : IDirectoryItem, IEnumerable<IDirectoryItem>
     {
+
+        /// <summary>
+        /// returns the next item from the directory based on its name.
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        IDirectoryItem GetChildDirectoryItem(string name);
+
         IFolderDirectoryItem GetOrAddFolder(string name);
 
         void Rename(string newName);

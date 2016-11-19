@@ -3,8 +3,9 @@
   "testRunner": "xunit",
   "dependencies": {
     "NETStandard.Library": "1.6.0",
-    "xunit": "2.2.0-beta2-build3300",
-    "dotnet-test-xunit": "2.2.0-preview2-build1029",
+    "dotnet-test-xunit": "2.2.0-*",
+    "Microsoft.AspNetCore.Testing": "1.2.0-*",
+    "xunit": "2.2.0-*",
     "Microsoft.Extensions.FileProviders.Composite": "1.0.0",
     "Microsoft.Extensions.FileProviders.Embedded": "1.0.0",
     "Microsoft.AspNetCore.NodeServices": "1.0.0-beta-000007",
@@ -13,17 +14,17 @@
     "Dazinator.AspNet.Extensions.FileProviders": "1.0.0-*"
   },
   "buildOptions": {
-
+    "copyToOutput": "TestDir\\"
   },
   "frameworks": {
-    "netcoreapp1.3": {
+    "netcoreapp1.0": {
       "dependencies": {
         "Microsoft.NETCore.App": {
-          "version": "1.0.0",
+          "version": "1.0.0-*",
           "type": "platform"
         }
       }
-
-    }
+    },
+    "net451": {}
   }
 }
