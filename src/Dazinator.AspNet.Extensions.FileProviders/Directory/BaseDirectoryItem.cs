@@ -156,7 +156,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         public abstract void Update(IFileInfo newFileInfo);
 
-        public abstract void OnReplaced(IFileInfo newFileInfo);
+        public abstract void ApplyUpdate(IFileInfo newFileInfo);
 
         public virtual void Rename(string newName)
         {

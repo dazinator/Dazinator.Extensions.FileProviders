@@ -44,13 +44,12 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 // Update(newDirItem);
             }
 
-            OnReplaced(newFileInfo);
+            ApplyUpdate(newFileInfo);
            
         }
         
-        public override void OnReplaced(IFileInfo newFileInfo)
-        {
-            // take a snapshot of current directory item with the old file.
+        public override void ApplyUpdate(IFileInfo newFileInfo)
+        {// take a snapshot of current directory item with the old file.
             var oldItem = new FileDirectoryItem(this.FileInfo, this.ParentFolder, false);
             // now change the file to the new file on this item.
             FileInfo = newFileInfo;

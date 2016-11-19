@@ -92,7 +92,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 Items.Remove(existingItem.Name);
             }
             Items[newItem.Name] = existingItem;
-            existingItem.OnReplaced(newItem);
+            existingItem.ApplyUpdate(newItem);
 
         }
 
@@ -116,14 +116,14 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 // Update(newDirItem);
             }
 
-            OnReplaced(newFileInfo);
+            ApplyUpdate(newFileInfo);
 
             //var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
             //FileInfo = newFileInfo;
             //OnRaiseItemUpdated(oldItem);
         }
 
-        public override void OnReplaced(IFileInfo newFileInfo)
+        public override void ApplyUpdate(IFileInfo newFileInfo)
         {
             var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
             FileInfo = newFileInfo;
