@@ -126,6 +126,56 @@ namespace FileProvider.Tests
         }
 
 
+
+        [Fact]
+        public void Can_Watch_Directory_For_Moved_Items()
+        {
+            // Arrange
+            IDirectory directory = new InMemoryDirectory();
+            directory.AddFile("/some/dir/folder/", new StringFileInfo("hi", "newfile.txt"));
+            directory.AddFile("/some/dir/another/", new StringFileInfo("hi", "newfile.txt"));
+            directory.AddFile("/some/dir/hello/", new StringFileInfo("hi", "newfile.txt"));
+           // directory.AddFile("/some/dir/hello/", new StringFileInfo("hi", "notinterested.txt"));
+
+
+            var watcher = new DirectoryWatcher(directory);
+            var watchPattern = "/some/dir/*/new*.txt";
+            watcher.AddFilter(watchPattern);
+
+            //
+           
+            int notifyCount = 0;
+            watcher.ItemUpdated += (sender, e) =>
+            {
+                DirectoryItemUpdatedEventArgs args = e.DirectoryItemEventArgs;
+                var matchedFilters = e.MatchedFilters;
+                Assert.Equal("newfile.txt", args.OldItem.Name);
+                Assert.Equal("newfile.txt", args.NewItem.Name);
+                Assert.StartsWith("/some/dir/", args.OldItem.Path);
+                Assert.StartsWith("/newfoldername/dir/", args.NewItem.Path);
+               
+                //Assert.Equal("/changed/dir/folder/newfile.txt", args.NewItem.Path);
+                notifyCount = notifyCount + 1;
+            };
+
+            var folder = directory.GetFolder("/some");
+            folder.Rename("newfoldername");
+
+            // should have notified us on the 3 items we were watching.
+            Assert.Equal(3, notifyCount);
+
+
+            // now rename the file again - should no longer match any patterns.
+            notifyCount = 0;
+            var existingItem = directory.GetFile("/newfoldername/dir/folder/newfile.txt");
+            existingItem.Update(new StringFileInfo("changed", "newfile.csv"));
+            Assert.Equal(0, notifyCount);
+
+
+
+        }
+
+
     }
 
    
