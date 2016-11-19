@@ -18,7 +18,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         void Rename(string newName);
 
-        void RenameItem(IDirectoryItem existingItem, string newname);
+        void ReplaceItem(IDirectoryItem existingItem, IFileInfo newItem); // don't like this being exposed.
 
         IFileDirectoryItem AddFile(IFileInfo file);
 

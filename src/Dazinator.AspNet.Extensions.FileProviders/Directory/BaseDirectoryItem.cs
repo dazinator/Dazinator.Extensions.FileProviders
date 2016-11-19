@@ -154,14 +154,17 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             return this.Path.Equals(item.Path);
         }
 
-        public void OnRenamed(string newName)
+        public abstract void Update(IFileInfo newFileInfo);
+
+        public abstract void OnReplaced(IFileInfo newFileInfo);
+
+        public virtual void Rename(string newName)
         {
-            var newDirItem = new ModifiedFileInfo(this.FileInfo);
-            newDirItem.Name = newName;
-            Update(newDirItem);
+            var newItem = new ModifiedFileInfo(FileInfo);
+            newItem.Name = newName;
+            Update(newItem);
         }
 
-        public abstract void Update(IFileInfo newFileInfo);
 
     }
 }

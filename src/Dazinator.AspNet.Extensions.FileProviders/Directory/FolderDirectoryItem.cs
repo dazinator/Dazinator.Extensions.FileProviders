@@ -79,25 +79,10 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             existingItem.Update(file);
             return existingItem;
         }
-
-        public void Rename(string newName)
+      
+        public void ReplaceItem(IDirectoryItem existingItem, IFileInfo newItem)
         {
-            if (this.ParentFolder != null)
-            {
-                if (FileInfo.Name != newName)
-                {
-                    this.ParentFolder.RenameItem(this, newName);
-                    return;
-                    //  OnRenamed(oldItem.Name, newFileInfo.Name);
-                }
-
-                // Update(newDirItem);
-            }
-        }
-
-        public void RenameItem(IDirectoryItem existingItem, string newName)
-        {
-            if (Items.ContainsKey(newName))
+            if (Items.ContainsKey(newItem.Name))
             {
                 throw new InvalidOperationException("Cannot rename item as an item already exists with the same name.");
             }
@@ -106,8 +91,8 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             {
                 Items.Remove(existingItem.Name);
             }
-            Items[newName] = existingItem;
-            existingItem.OnRenamed(newName);
+            Items[newItem.Name] = existingItem;
+            existingItem.OnReplaced(newItem);
 
         }
 
@@ -119,12 +104,33 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         public override void Update(IFileInfo newFileInfo)
         {
+
+            if (this.ParentFolder != null)
+            {
+                if (FileInfo.Name != newFileInfo.Name)
+                {
+                    this.ParentFolder.ReplaceItem(this, newFileInfo);
+                    return;
+                    //  OnRenamed(oldItem.Name, newFileInfo.Name);
+                }
+                // Update(newDirItem);
+            }
+
+            OnReplaced(newFileInfo);
+
+            //var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
+            //FileInfo = newFileInfo;
+            //OnRaiseItemUpdated(oldItem);
+        }
+
+        public override void OnReplaced(IFileInfo newFileInfo)
+        {
             var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
             FileInfo = newFileInfo;
             OnRaiseItemUpdated(oldItem);
         }
 
-
+        
         //public void OnUpdated(IFileInfo newFileInfo)
         //{
         //    var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);

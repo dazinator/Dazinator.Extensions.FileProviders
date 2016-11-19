@@ -32,6 +32,24 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         public override void Update(IFileInfo newFileInfo)
         {
+            // If this is a rename, ensure parent is notified, as we need to be re-indexed by the parent folder.
+            if (this.ParentFolder != null)
+            {
+                if (FileInfo.Name != newFileInfo.Name)
+                {
+                    this.ParentFolder.ReplaceItem(this, newFileInfo);
+                    return; // parent will call OnReplaced();
+                    //  OnRenamed(oldItem.Name, newFileInfo.Name);
+                }
+                // Update(newDirItem);
+            }
+
+            OnReplaced(newFileInfo);
+           
+        }
+        
+        public override void OnReplaced(IFileInfo newFileInfo)
+        {
             // take a snapshot of current directory item with the old file.
             var oldItem = new FileDirectoryItem(this.FileInfo, this.ParentFolder, false);
             // now change the file to the new file on this item.
@@ -39,12 +57,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             // now signal the file has changed.
             OnRaiseItemUpdated(oldItem);
         }
-
-        //public IDirectoryItem GetChildDirectoryItem(string name)
-        //{
-        //    // files in a directory cannot have child items.
-        //    return null;
-        //}
 
         public override void Accept(BaseDirectoryVisitor Visitor)
         {

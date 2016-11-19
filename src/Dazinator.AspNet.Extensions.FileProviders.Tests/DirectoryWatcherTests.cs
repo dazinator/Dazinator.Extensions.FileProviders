@@ -131,41 +131,46 @@ namespace FileProvider.Tests
         public void Can_Watch_Directory_For_Moved_Items()
         {
             // Arrange
+            // Prepare our in memory directory.
             IDirectory directory = new InMemoryDirectory();
             directory.AddFile("/some/dir/folder/", new StringFileInfo("hi", "newfile.txt"));
             directory.AddFile("/some/dir/another/", new StringFileInfo("hi", "newfile.txt"));
             directory.AddFile("/some/dir/hello/", new StringFileInfo("hi", "newfile.txt"));
-           // directory.AddFile("/some/dir/hello/", new StringFileInfo("hi", "notinterested.txt"));
-
-
+         
+           // Watch the directory using a pattern as a filter.
             var watcher = new DirectoryWatcher(directory);
             var watchPattern = "/some/dir/*/new*.txt";
             watcher.AddFilter(watchPattern);
 
-            //
-           
+            // Register for the watchers ItemUpdated event, this is how it should notify us of updated
+            // files.
             int notifyCount = 0;
             watcher.ItemUpdated += (sender, e) =>
             {
                 DirectoryItemUpdatedEventArgs args = e.DirectoryItemEventArgs;
-                var matchedFilters = e.MatchedFilters;
+                var matchedFilters = e.MatchedFilters; // contains the patterns that were matched (the reason we are being notified)
+                // we aren't renaming the file so the file should have the same name.
+                // We are renaming a parent folder, so only the items full path should be different.
                 Assert.Equal("newfile.txt", args.OldItem.Name);
                 Assert.Equal("newfile.txt", args.NewItem.Name);
-                Assert.StartsWith("/some/dir/", args.OldItem.Path);
-                Assert.StartsWith("/newfoldername/dir/", args.NewItem.Path);
+                Assert.StartsWith("/some/dir/", args.OldItem.Path); // the old folder path.
+                Assert.StartsWith("/newfoldername/dir/", args.NewItem.Path); // the new folder path.
                
                 //Assert.Equal("/changed/dir/folder/newfile.txt", args.NewItem.Path);
                 notifyCount = notifyCount + 1;
             };
 
+            // Act
+            // Rename the root folder /some too be /newfoldername
+            // this should cause the watcher to notifiy us of effected items we are interested in.
             var folder = directory.GetFolder("/some");
             folder.Rename("newfoldername");
 
-            // should have notified us on the 3 items we were watching.
+            // Watcher should have notified us on of 3 items we were watching (matched by the pattern)
             Assert.Equal(3, notifyCount);
 
-
-            // now rename the file again - should no longer match any patterns.
+            // now rename the file again - this time the watcher should not notify us, as the items live in a directory
+            // that no longer match out pattern - i.e the previous rename operation has moved them outside of our filter pattern.
             notifyCount = 0;
             var existingItem = directory.GetFile("/newfoldername/dir/folder/newfile.txt");
             existingItem.Update(new StringFileInfo("changed", "newfile.csv"));
