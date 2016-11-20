@@ -2,6 +2,9 @@
 
 [![Build status](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn/branch/master?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/master)
 
+[![Build status](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders)
+
+
 Provides some additonal `IFileProvider` implementations that others may find useful.
 
 
