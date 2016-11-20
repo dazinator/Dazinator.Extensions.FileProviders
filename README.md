@@ -1,12 +1,11 @@
+| Branch  | Build Status |
+| ------------- | ------------- |
+| Master  |[![Build master](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn/branch/master?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/master) |
+| Develop | [![Build develop](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/develop)  |
+
 # Dazinator.AspNet.Extensions.FileProviders
 
-[![Build master](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn/branch/master?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/master)
-
-[![Build develop](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/develop)
-
-
-Provides some additonal `IFileProvider` implementations that others may find useful.
-
+Provides some useful `IFileProvider` implementations for `asp.net core`.
 
 ## RequestPathFileProvider 
 
@@ -24,3 +23,5 @@ You can do this:
 ```
 
 Now you can resolve exactly the same files and directories through the `RequestPathFileProvider` that the original `FileProvider` has, but you must do so using subpaths that have `/specialfiles` prepended.
+
+## InMemoryFileProvider 
