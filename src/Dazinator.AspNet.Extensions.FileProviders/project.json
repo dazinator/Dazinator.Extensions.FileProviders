@@ -3,6 +3,8 @@
   "description": "Dazinator.AspNet.Extensions.FileProviders",
   "version": "0.1.0",
   "dependencies": {
+    "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.0",
+    "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
     "Microsoft.Extensions.FileProviders.Abstractions": "1.0.0",
     "NETStandard.Library": "1.6.0"
   },
@@ -17,6 +19,7 @@
   "frameworks": {
     "netstandard1.6": {
       "imports": "dnxcore50"
-    }
+    },
+    "net451": {}
   }
 }

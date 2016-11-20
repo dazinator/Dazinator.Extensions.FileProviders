@@ -42,8 +42,10 @@ namespace FileProvider.Tests
                     continue;
                 }
 
-                fileFound = true;
-                Assert.Equal(file.Name, "TestFile.txt");
+                if (file.Name == "TestFile.txt")
+                {
+                    fileFound = true;
+                }
             }
 
             Assert.True(subDirectoryFound);
