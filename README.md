@@ -6,6 +6,10 @@
 # Dazinator.AspNet.Extensions.FileProviders
 
 Provides some useful `IFileProvider` implementations for `asp.net core`.
+Current FileProvider Implementations include:
+
+- RequestPathFileProvider
+- InMemoryFileProvider
 
 ## RequestPathFileProvider 
 
@@ -25,3 +29,71 @@ You can do this:
 Now you can resolve exactly the same files and directories through the `RequestPathFileProvider` that the original `FileProvider` has, but you must do so using subpaths that have `/specialfiles` prepended.
 
 ## InMemoryFileProvider 
+
+Allows you to provide files from an in memory directory.
+For example:
+
+```
+
+             // Arrange
+            var provider = new InMemoryFileProvider();
+            provider.Directory.AddFile("/some/path/", new StringFileInfo("file contents", "foo.txt"));
+            // Act
+            var fileInfo = provider.GetFileInfo("DoesNotExist.txt");
+
+            // Assert
+            Assert.NotNull(fileInfo);
+            Assert.False(fileInfo.Exists);
+
+```
+
+The file provider wraps an `IDirectory` which supports the kind of operations you would expect of a directory.
+You can set up the directory first, or perform operations on the `IDirectory` independent of the file provider.
+
+For example:
+
+```
+
+            // Arrange
+            IDirectory directory = new InMemoryDirectory();
+
+            // Act
+            // Adds the specified folder structure to this directory:
+            var folder = directory.GetOrAddFolder("/some/dir/folder");
+            Assert.NotNull(folder);
+
+            // Get particular folders
+            var parentFolder = directory.GetFolder("/some/dir");
+            var grandparentFolder = directory.GetFolder("/some");
+
+            // Can also get the "ParentFolder" of an existing folder. 
+            Assert.Equal(parentFolder, folder.ParentFolder);
+            Assert.Equal("/some/dir/folder", folder.Path);
+            Assert.Equal("folder", folder.Name);
+            Assert.NotNull(folder.FileInfo);
+            Assert.True(folder.IsFolder);
+
+            // "/some/dir/" should have parent folder of "/some"
+            Assert.Equal(grandparentFolder, parentFolder.ParentFolder);
+            Assert.Equal("/some/dir", parentFolder.Path);
+            Assert.Equal("dir", parentFolder.Name);
+            Assert.NotNull(parentFolder.FileInfo);
+            Assert.True(parentFolder.IsFolder);
+
+            // "/some" should have parent folder which is the root folder for this directory.
+            Assert.Equal(directory.Root, grandparentFolder.ParentFolder);
+            Assert.Equal("/some", grandparentFolder.Path);
+            Assert.Equal("some", grandparentFolder.Name);
+            Assert.NotNull(grandparentFolder.FileInfo);
+            Assert.True(grandparentFolder.IsFolder);
+
+```
+
+You can then pass the directory to the provider:
+
+```
+  var provider = new InMemoryFileProvider(directory);
+```
+
+
+
