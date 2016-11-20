@@ -60,40 +60,24 @@ For example:
             // Act
             // Adds the specified folder structure to this directory:
             var folder = directory.GetOrAddFolder("/some/dir/folder");
+            
+            // could add / update, delete files in this directory etc.
             Assert.NotNull(folder);
 
-            // Get particular folders
-            var parentFolder = directory.GetFolder("/some/dir");
-            var grandparentFolder = directory.GetFolder("/some");
-
-            // Can also get the "ParentFolder" of an existing folder. 
-            Assert.Equal(parentFolder, folder.ParentFolder);
-            Assert.Equal("/some/dir/folder", folder.Path);
-            Assert.Equal("folder", folder.Name);
-            Assert.NotNull(folder.FileInfo);
-            Assert.True(folder.IsFolder);
-
-            // "/some/dir/" should have parent folder of "/some"
-            Assert.Equal(grandparentFolder, parentFolder.ParentFolder);
-            Assert.Equal("/some/dir", parentFolder.Path);
-            Assert.Equal("dir", parentFolder.Name);
-            Assert.NotNull(parentFolder.FileInfo);
-            Assert.True(parentFolder.IsFolder);
-
-            // "/some" should have parent folder which is the root folder for this directory.
-            Assert.Equal(directory.Root, grandparentFolder.ParentFolder);
-            Assert.Equal("/some", grandparentFolder.Path);
-            Assert.Equal("some", grandparentFolder.Name);
-            Assert.NotNull(grandparentFolder.FileInfo);
-            Assert.True(grandparentFolder.IsFolder);
+            var provider = new InMemoryFileProvider(directory);           
 
 ```
 
-You can then pass the directory to the provider:
+You can add, update, delete files in the `IDirectory` as you might expect. You can use the `StringFileInfo` class which represents in memory file.
+
+The following adds a file to the directory at `/some/dir/foo.txt` with the contents "contents":
+
 
 ```
-  var provider = new InMemoryFileProvider(directory);
+var file = directory.AddFile("/some/dir", new StringFileInfo("contents","foo.txt"));
+
 ```
 
+The `InMemoryFileProvider` fully supports `watching` and change tokens. Which means if you add / update / delete a file or folder in the directory, the appropriate change tokens will be signalled.
 
 
