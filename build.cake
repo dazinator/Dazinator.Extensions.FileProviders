@@ -2,6 +2,7 @@
 // TOOLS
 //////////////////////////////////////////////////////////////////////
 #tool "nuget:?package=GitVersion.CommandLine"
+#tool "nuget:?package=GitReleaseNotes"
 #addin "MagicChunks"
 
 //////////////////////////////////////////////////////////////////////
@@ -49,7 +50,8 @@ Task("__Default")
     .IsDependentOn("__Build")
     .IsDependentOn("__Test")
     .IsDependentOn("__UpdateProjectJsonVersion")
-    .IsDependentOn("__Pack");
+    .IsDependentOn("__Pack")
+    .IsDependentOn("__GenerateReleaseNotes");
 
 Task("__Clean")
     .Does(() =>
@@ -124,6 +126,26 @@ Task("__Pack")
             
     DotNetCorePack($"{projectToPackage}", settings);
 });
+
+Task("__GenerateReleaseNotes")
+    .Does(() =>
+{
+    var settings = new DotNetCorePackSettings
+    {
+        Configuration = "Release",
+        OutputDirectory = $"{artifactsDir}"        
+    };
+            
+    GitReleaseNotes($"{artifactsDir}/ReleaseNotes.md", new GitReleaseNotesSettings {
+    WorkingDirectory         = ".",
+    Verbose                  = true,       
+    RepoBranch               = "master",    
+    Version                  = nugetVersion,
+    AllLabels                = true
+});
+});
+
+
 
 
 //////////////////////////////////////////////////////////////////////
