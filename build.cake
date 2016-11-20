@@ -158,18 +158,7 @@ Task("__GenerateReleaseNotes")
 
 Task("__PublishNuGetPackages")
     .Does(() =>
-{   
-
-            var feed = new
-            {
-                Name = "nuget.org",
-                Source = EnvironmentVariable("PUBLIC_NUGET_FEED_SOURCE")
-            };
-            
-            NuGetAddSource(
-                name:feed.Name,
-                source:feed.Source
-            );
+{              
 
             var apiKey = EnvironmentVariable("NuGetOrgApiKey");
             var nuGetSettings = new PublishNuGetsSettings(){ForcePush = false, MaxAttempts = 2};
