@@ -162,7 +162,7 @@ Task("__PublishNuGetPackages")
 
             var apiKey = EnvironmentVariable("NuGetOrgApiKey");
             var nuGetSettings = new PublishNuGetsSettings(){ForcePush = false, MaxAttempts = 2};
-            PublishNuGets("nuget.org", apiKey, nuGetSettings, "./artifacts/*.nupkg");          
+            PublishNuGets("NuGet", apiKey, nuGetSettings, "./artifacts/*.nupkg");          
 });
 
 
