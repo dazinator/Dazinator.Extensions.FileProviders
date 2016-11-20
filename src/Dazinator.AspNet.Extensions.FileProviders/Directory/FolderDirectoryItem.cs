@@ -192,7 +192,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         private IFileDirectoryItem GetFileItem(string path)
         {
-            var existingItem = GetChildDirectoryItem(path) as IFileDirectoryItem;
+            var existingItem = NavigateToNext(path) as IFileDirectoryItem;
             if (existingItem == null)
             {
                 throw new InvalidOperationException("No such file exists.");
@@ -205,8 +205,18 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// </summary>
         /// <param name="name"></param>
         /// <returns>The item in the folder, or nulll if it doesn't exist.</returns>
-        public IDirectoryItem GetChildDirectoryItem(string name)
+        public IDirectoryItem NavigateToNext(string name)
         {
+            if (name.Equals(".."))
+            {
+                return this.ParentFolder;
+            }
+
+            if (name.Equals("."))
+            {
+                return this;
+            }
+
             if (Items.ContainsKey(name))
             {
                 var existing = Items[name];

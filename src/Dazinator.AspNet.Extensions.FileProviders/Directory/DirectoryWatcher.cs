@@ -63,7 +63,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             // _pattern = pattern;
         }
 
-
         public override void Visit(FileDirectoryItem item)
         {
             switch (_visitMode)
@@ -96,7 +95,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             }
 
         }
-
 
         /// <summary>
         /// Watches a particular folder in the directory, and raises an event whenever the folder has a new item added to it, or an item deleted from it, or an item 

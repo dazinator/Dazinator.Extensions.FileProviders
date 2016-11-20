@@ -8,11 +8,12 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
     {
 
         /// <summary>
-        /// returns the next item from the directory based on its name.
+        /// navigates onwards (or backwards) to the next directory item in the path, based on the name specified.
         /// </summary>
+        /// <remarks>Use .. to navigate back to the parent directory, or . to stay on the current directory, or the name of a descendent file or folder to navigate onwards.</remarks>
         /// <param name="name"></param>
         /// <returns></returns>
-        IDirectoryItem GetChildDirectoryItem(string name);
+        IDirectoryItem NavigateToNext(string name);
 
         IFolderDirectoryItem GetOrAddFolder(string name);
 

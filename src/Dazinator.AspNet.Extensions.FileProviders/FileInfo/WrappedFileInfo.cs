@@ -5,7 +5,7 @@ using Microsoft.Extensions.FileProviders;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
-    public class ModifiedFileInfo : IFileInfo
+    public class WrappedFileInfo : IFileInfo
     {
 
         private readonly IFileInfo _originalFileInfo;
@@ -17,7 +17,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         private DateTimeOffset? _LastModified = null;
         private bool? _IsDirectory = null;
 
-        public ModifiedFileInfo(IFileInfo originalFileInfo)
+        public WrappedFileInfo(IFileInfo originalFileInfo)
         {
             _originalFileInfo = originalFileInfo;
         }

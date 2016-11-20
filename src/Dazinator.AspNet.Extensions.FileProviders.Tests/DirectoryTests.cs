@@ -168,13 +168,13 @@ namespace FileProvider.Tests
             Assert.False(fileItem.FileInfo.Exists);
 
             // verify child items are no longer in directory.
-            var item = rootFolder.GetChildDirectoryItem("child");
+            var item = rootFolder.NavigateToNext("child");
             Assert.Null(item);
 
-            item = childFolder.GetChildDirectoryItem("grandchild");
+            item = childFolder.NavigateToNext("grandchild");
             Assert.Null(item);
 
-            item = grandchildFolder.GetChildDirectoryItem("foo.txt");
+            item = grandchildFolder.NavigateToNext("foo.txt");
             Assert.Null(item);
 
         }

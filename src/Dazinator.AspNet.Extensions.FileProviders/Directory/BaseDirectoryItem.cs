@@ -160,7 +160,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         public virtual void Rename(string newName)
         {
-            var newItem = new ModifiedFileInfo(FileInfo);
+            var newItem = new WrappedFileInfo(FileInfo);
             newItem.Name = newName;
             Update(newItem);
         }

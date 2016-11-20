@@ -133,6 +133,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
                     case TokenKind.Wildcard:
                         items.Add(this.ParseSubSegment());
                         continue;
+                    //case TokenKind.PathSeperator:
+                    //    this.AcceptIt();
+                    //    continue;
                     default:
                         break;
                 }
@@ -155,6 +158,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
                 return root;
             }
 
+            if (this._currentToken.Kind == TokenKind.Identifier)
+            {
+                var root = new GlobNode(GlobNodeType.Root, this._currentToken.Spelling);
+                this.Accept(TokenKind.Identifier);
+                return root;
+            }
+
             return new GlobNode(GlobNodeType.Root, "");
         }
 
@@ -162,7 +172,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Globbing
         {
             var items = new List<GlobNode>();
 
-            if (this._currentToken.Kind == TokenKind.PathSeperator || this._currentToken.Kind == TokenKind.WindowsRoot)
+            if (this._currentToken.Kind == TokenKind.PathSeperator 
+                || this._currentToken.Kind == TokenKind.Identifier
+                || this._currentToken.Kind == TokenKind.WindowsRoot)
                 items.Add(this.ParseRoot());
 
             while (this._currentToken.Kind == TokenKind.PathSeperator)

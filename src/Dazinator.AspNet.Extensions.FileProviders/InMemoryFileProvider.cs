@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using Microsoft.Extensions.FileProviders;
-using System.Collections.Generic;
-using System.Linq;
 using Dazinator.AspNet.Extensions.FileProviders.Directory;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
+using System.Threading;
 
 namespace Dazinator.AspNet.Extensions.FileProviders
 {
     public class InMemoryFileProvider : IFileProvider, IDisposable
     {
 
-        private readonly ConcurrentDictionary<string, IChangeToken> _matchInfoCache = new ConcurrentDictionary<string, IChangeToken>();
+        private readonly ConcurrentDictionary<string, ChangeTokenInfo> _matchInfoCache = new ConcurrentDictionary<string, ChangeTokenInfo>();
         private readonly Lazy<DirectoryWatcher> _dirWatcher;
 
         public InMemoryFileProvider() : this(new InMemoryDirectory())
@@ -24,66 +22,55 @@ namespace Dazinator.AspNet.Extensions.FileProviders
             Directory = directory;
             _dirWatcher = new Lazy<DirectoryWatcher>(() =>
             {
-                return new DirectoryWatcher(Directory);
+                var watcher = new DirectoryWatcher(Directory);
+                watcher.ItemAdded += Watcher_ItemAdded;
+                watcher.ItemDeleted += Watcher_ItemDeleted;
+                watcher.ItemUpdated += Watcher_ItemUpdated;
+                return watcher;
             });
         }
 
-        private void _dirWatcher_ItemUpdated(object sender, DirectoryWatcherFilterMatchedEventArgs<DirectoryItemUpdatedEventArgs> e)
+        private void Watcher_ItemUpdated(object sender, DirectoryWatcherFilterMatchedEventArgs<DirectoryItemUpdatedEventArgs> e)
         {
-            InMemoryChangeToken[] tokens = GetTokens(e.MatchedFilters).ToArray();
-            foreach (var token in tokens)
-            {
-                token.HasChanged = true;
-                // send the old or the new item? guessing send the new!
-                token.RaiseCallback(e.DirectoryItemEventArgs.NewItem.FileInfo);
-            }
+            SignalTokens(e.MatchedFilters);
         }
 
-        private void _dirWatcher_ItemDeleted(object sender, DirectoryWatcherFilterMatchedEventArgs<DirectoryItemDeletedEventArgs> e)
+        private void Watcher_ItemDeleted(object sender, DirectoryWatcherFilterMatchedEventArgs<DirectoryItemDeletedEventArgs> e)
         {
-            // find the tokens
-            InMemoryChangeToken[] tokens = GetTokens(e.MatchedFilters).ToArray();
-            foreach (var token in tokens)
-            {
-                token.HasChanged = true;
-                token.RaiseCallback(e.DirectoryItemEventArgs.DeletedItem.FileInfo);
-            }
+            SignalTokens(e.MatchedFilters);
         }
 
-        private void _dirWatcher_ItemAdded(object sender, DirectoryWatcherFilterMatchedEventArgs<DirectoryItemAddedEventArgs> e)
+        private void Watcher_ItemAdded(object sender, DirectoryWatcherFilterMatchedEventArgs<DirectoryItemAddedEventArgs> e)
         {
-            // A directory we were watching has had an item added to it.
-            //    // do we need to signal the change token?          
-
-            // find the tokens
-            InMemoryChangeToken[] tokens = GetTokens(e.MatchedFilters).ToArray();
-            foreach (var token in tokens)
-            {
-                token.HasChanged = true;
-                token.RaiseCallback(e.DirectoryItemEventArgs.NewItem.FileInfo);
-            }
-
+            SignalTokens(e.MatchedFilters);
         }
-
-        private IEnumerable<InMemoryChangeToken> GetTokens(string[] matchedFilters)
+       
+        private void SignalTokens(string[] keys)
         {
-            IChangeToken changeToken;
-            foreach (var filter in matchedFilters)
+            
+            foreach (var key in keys)
             {
-
-                if (_matchInfoCache.TryGetValue(filter, out changeToken))
+                ChangeTokenInfo changeToken = null;
+                if (_matchInfoCache.TryRemove(key, out changeToken))
                 {
-                    // return existing token for this file path.
-                    var inMemoryChangeToken = changeToken as InMemoryChangeToken;
-                    if (inMemoryChangeToken != null)
-                    {
-                        yield return inMemoryChangeToken;
-                    }
+                    changeToken.TokenSource.Cancel();
                 }
+
+                //if (_matchInfoCache.TryGetValue(filter, out changeToken))
+                //{
+                //    // return existing token for this file path.
+                //   // yield return changeToken;
+                //    //var inMemoryChangeToken = changeToken as InMemoryChangeToken;
+                //    //if (inMemoryChangeToken != null)
+                //    //{
+                //    //    yield return inMemoryChangeToken;
+                //    //}
+                //}
             }
         }
 
-        public DirectoryWatcher DirectoryWatcher {
+        public DirectoryWatcher DirectoryWatcher
+        {
             get
             {
                 // DirectoryWatcher is created on first access here.
@@ -124,23 +111,17 @@ namespace Dazinator.AspNet.Extensions.FileProviders
 
             var subPath = SubPathInfo.Parse(filter);
             var subPathString = subPath.ToString();
-            IChangeToken existing;
-            // If we already have a changetoken for this filter, return the existing one.
-            if (this._matchInfoCache.TryGetValue(subPathString, out existing))
+            // IChangeToken existing;
+            var resultToken = GetOrAddChangeToken(subPathString, (t) =>
             {
-                return existing;
-            }
-
-            DirectoryWatcher.AddFilter(subPathString); // now only changes to item in the directory that match the filter will cause events to be raised / us to be notified.
-
-            var resultToken = GetOrAddChangeToken(subPathString, () => new InMemoryChangeToken());
+                DirectoryWatcher.AddFilter(subPathString);
+            });
             return resultToken;
-
         }
 
-        private IChangeToken GetOrAddChangeToken(string key, Func<IChangeToken> tokenFactory)
+        private IChangeToken GetOrAddChangeToken(string key, Action<ChangeTokenInfo> onNewTokenAdded)
         {
-            IChangeToken fileToken;
+            ChangeTokenInfo fileToken;
             if (_matchInfoCache.TryGetValue(key, out fileToken))
             {
                 // return existing token for this file path.
@@ -148,10 +129,16 @@ namespace Dazinator.AspNet.Extensions.FileProviders
             else
             {
                 // var newToken = new InMemoryChangeToken();
-                var newToken = tokenFactory();
-                fileToken = _matchInfoCache.GetOrAdd(key, newToken);
+                // var newToken = tokenFactory();
+
+                var cancellationTokenSource = new CancellationTokenSource();
+                var cancellationChangeToken = new CancellationChangeToken(cancellationTokenSource.Token);
+                var tokenInfo = new ChangeTokenInfo(cancellationChangeToken, cancellationTokenSource);
+                // tokenInfo = _wildcardTokenLookup.GetOrAdd(pattern, tokenInfo);
+                fileToken = _matchInfoCache.GetOrAdd(key, tokenInfo);
+                onNewTokenAdded(fileToken);
             }
-            return fileToken;
+            return fileToken.ChangeToken;
         }
 
         /// <summary>
@@ -161,9 +148,25 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         {
             if (_dirWatcher.IsValueCreated)
             {
+                _dirWatcher.Value.ItemAdded -= Watcher_ItemAdded;
+                _dirWatcher.Value.ItemDeleted -=Watcher_ItemDeleted;
+                _dirWatcher.Value.ItemUpdated -= Watcher_ItemUpdated;
                 _dirWatcher.Value.Dispose();
             }
-           
+
+        }
+
+        private class ChangeTokenInfo
+        {
+            public ChangeTokenInfo(IChangeToken changeToken, CancellationTokenSource tokenSource)
+            {
+                ChangeToken = changeToken;
+                TokenSource = tokenSource;
+            }
+
+            public IChangeToken ChangeToken { get; }
+
+            public CancellationTokenSource TokenSource { get; }
         }
     }
 }

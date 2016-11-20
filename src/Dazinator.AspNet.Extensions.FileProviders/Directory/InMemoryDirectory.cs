@@ -9,6 +9,10 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         private readonly IFolderDirectoryItem _rootFolder;
 
+        public InMemoryDirectory(string rootDirName) : this(new FolderDirectoryItem(rootDirName, null))
+        {
+        }
+
         public InMemoryDirectory() : this(new FolderDirectoryItem(string.Empty, null))
         {
         }
@@ -92,13 +96,27 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
             var segments = PathUtils.SplitPathIntoSegments(path);
             IDirectoryItem currentDirectoryItem = _rootFolder;
+            
 
-            foreach (var segment in segments)
+            // if the root folder has a name then all paths must start
+            // with this name.
+            int segmentStart = 0;
+            if (!String.IsNullOrWhiteSpace(_rootFolder.Name))
             {
+                if (segments[0] != _rootFolder.Name)
+                {
+                    return null;
+                }
+                segmentStart = 1; //  skip the first segment as it matches the root folder rname.
+            }
+
+            for (int i = segmentStart; i < segments.Length; i++)
+            {
+                var segment = segments[i];
                 if (currentDirectoryItem.IsFolder)
                 {
                     var folderItem = currentDirectoryItem as IFolderDirectoryItem;
-                    currentDirectoryItem = folderItem.GetChildDirectoryItem(segment);
+                    currentDirectoryItem = folderItem.NavigateToNext(segment);
                 }
                 else
                 {
@@ -112,7 +130,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                     // the item doesn't exist in the directory.
                     return null;
                 }
-
             }
 
             return currentDirectoryItem;
