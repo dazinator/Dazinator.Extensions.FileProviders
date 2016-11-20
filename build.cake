@@ -3,7 +3,13 @@
 //////////////////////////////////////////////////////////////////////
 #tool "nuget:?package=GitVersion.CommandLine"
 #tool "nuget:?package=GitReleaseNotes"
+#addin nuget:?package=Cake.Git
+#addin "Cake.ExtendedNuGet"
+#addin "nuget:?package=NuGet.Core&version=2.8.6"
 #addin "MagicChunks"
+
+
+
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -51,7 +57,9 @@ Task("__Default")
     .IsDependentOn("__Test")
     .IsDependentOn("__UpdateProjectJsonVersion")
     .IsDependentOn("__Pack")
-    .IsDependentOn("__GenerateReleaseNotes");
+    .IsDependentOn("__GenerateReleaseNotes")
+    .IsDependentOn("__PublishNuGetPackages");
+    
 
 Task("__Clean")
     .Does(() =>
@@ -146,6 +154,27 @@ Task("__GenerateReleaseNotes")
 });
 
 
+
+
+Task("__PublishNuGetPackages")
+    .Does(() =>
+{   
+
+            var feed = new
+            {
+                Name = "nuget.org",
+                Source = EnvironmentVariable("PUBLIC_NUGET_FEED_SOURCE")
+            };
+            
+            NuGetAddSource(
+                name:feed.Name,
+                source:feed.Source
+            );
+
+            var apiKey = EnvironmentVariable("NuGetOrgApiKey");
+            var nuGetSettings = new PublishNuGetsSettings(){ForcePush = false, MaxAttempts = 2};
+            PublishNuGets("nuget.org", apiKey, nuGetSettings, "./artifacts/*.nupkg");          
+});
 
 
 //////////////////////////////////////////////////////////////////////
