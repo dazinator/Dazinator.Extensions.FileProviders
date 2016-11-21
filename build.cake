@@ -72,12 +72,16 @@ Task("__Clean")
 Task("__SetAppVeyorBuildNumber")
     .Does(() =>
 {
-    if(isContinuousIntegrationBuild)
+    if (BuildSystem.AppVeyor.IsRunningOnAppVeyor)
     {
         var appVeyorBuildNumber = EnvironmentVariable("APPVEYOR_BUILD_NUMBER");
         var appVeyorBuildVersion = $"{nugetVersion}+{appVeyorBuildNumber}";
-        Update-AppveyorBuild -Version appVeyorBuildVersion;
-    }   
+        BuildSystem.AppVeyor.UpdateBuildVersion(appVeyorBuildVersion);
+    }
+    else
+    {
+        Information("Not running on AppVeyor");
+    }    
 });
 
 Task("__Restore")
