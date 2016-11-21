@@ -9,8 +9,6 @@
 #addin "MagicChunks"
 
 
-
-
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
@@ -61,7 +59,6 @@ Task("__Default")
     .IsDependentOn("__Pack")
     .IsDependentOn("__GenerateReleaseNotes")
     .IsDependentOn("__PublishNuGetPackages");
-    
 
 Task("__Clean")
     .Does(() =>
@@ -69,6 +66,17 @@ Task("__Clean")
     CleanDirectory(artifactsDir);
     CleanDirectories("./src/**/bin");
     CleanDirectories("./src/**/obj");
+});
+
+Task("__SetAppVeyorBuildNumber")
+    .Does(() =>
+{
+    if(isContinuousIntegrationBuild)
+    {
+        var appVeyorBuildNumber = EnvironmentVariable("APPVEYOR_BUILD_NUMBER");
+        var appVeyorBuildVersion = $"{nugetVersion}+{appVeyorBuildNumber}";
+        Update-AppveyorBuild -Version appVeyorBuildVersion
+    }   
 });
 
 Task("__Restore")
