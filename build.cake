@@ -163,8 +163,8 @@ Task("__PublishNuGetPackages")
             if(isContinuousIntegrationBuild)
             {
 
-                var nugetPackageName = $"{projectName}.{nugetVersion}.nupkg";
-                var nugetSourcePackageName = $"{projectName}.{nugetVersion}.symbols.nupkg";
+                var nugetPackageName = $"{artifactsDir}/{projectName}.{nugetVersion}.nupkg";
+                var nugetSourcePackageName = $"{artifactsDir}/{projectName}.{nugetVersion}.symbols.nupkg";
 
                 var feed = new
                     {
