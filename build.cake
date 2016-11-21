@@ -75,7 +75,7 @@ Task("__SetAppVeyorBuildNumber")
     {
         var appVeyorBuildNumber = EnvironmentVariable("APPVEYOR_BUILD_NUMBER");
         var appVeyorBuildVersion = $"{nugetVersion}+{appVeyorBuildNumber}";
-        Update-AppveyorBuild -Version appVeyorBuildVersion
+        Update-AppveyorBuild -Version appVeyorBuildVersion;
     }   
 });
 
