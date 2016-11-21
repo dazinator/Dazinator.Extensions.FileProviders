@@ -21,8 +21,10 @@ var configuration = Argument("configuration", "Release");
 // GLOBAL VARIABLES
 ///////////////////////////////////////////////////////////////////////////////
 var artifactsDir = "./artifacts";
+var projectName = "Dazinator.AspNet.Extensions.FileProviders";
 var globalAssemblyFile = "./src/GlobalAssemblyInfo.cs";
-var projectToPackage = "./src/Dazinator.AspNet.Extensions.FileProviders";
+var projectToPackage = $"./src/{projectName}";
+
 
 var isContinuousIntegrationBuild = !BuildSystem.IsLocalBuild;
 
@@ -154,26 +156,41 @@ Task("__GenerateReleaseNotes")
 });
 
 
-
-
 Task("__PublishNuGetPackages")
     .Does(() =>
 {              
 
-            var feed = new
+            if(isContinuousIntegrationBuild)
             {
-                Name = "NuGetOrg",
-                Source = EnvironmentVariable("PUBLIC_NUGET_FEED_SOURCE")
-            };
-            
-            NuGetAddSource(
-                name:feed.Name,
-                source:feed.Source
-            );
 
-            var apiKey = EnvironmentVariable("NuGetOrgApiKey");
-            var nuGetSettings = new PublishNuGetsSettings(){ForcePush = true, MaxAttempts = 2};
-            PublishNuGets(feed.Name, apiKey, nuGetSettings, "./artifacts/*.nupkg");                    
+                var nugetPackageName = $"{projectName}.{nugetVersion}.nupkg"
+                var nugetSourcePackageName = $"{projectName}.{nugetVersion}.symbols.nupkg"
+
+                var feed = new
+                    {
+                    Name = "NuGetOrg",
+                    Source = EnvironmentVariable("PUBLIC_NUGET_FEED_SOURCE")
+                };
+            
+                NuGetAddSource(
+                    name:feed.Name,
+                    source:feed.Source
+                );
+
+                var apiKey = EnvironmentVariable("NuGetOrgApiKey");
+
+                 // Push the package.
+                NuGetPush(package, new NuGetPushSettings {
+                    Source = feed.Source,
+                    ApiKey = apiKey
+                });
+
+                 // Push the source package.
+                NuGetPush(nugetSourcePackageName, new NuGetPushSettings {
+                    Source = feed.Source,
+                    ApiKey = apiKey
+                });            
+            }  
 });
 
 
