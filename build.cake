@@ -160,9 +160,20 @@ Task("__PublishNuGetPackages")
     .Does(() =>
 {              
 
+            var feed = new
+            {
+                Name = "NuGetOrg",
+                Source = EnvironmentVariable("PUBLIC_NUGET_FEED_SOURCE")
+            };
+            
+            NuGetAddSource(
+                name:feed.Name,
+                source:feed.Source
+            );
+
             var apiKey = EnvironmentVariable("NuGetOrgApiKey");
-            var nuGetSettings = new PublishNuGetsSettings(){ForcePush = false, MaxAttempts = 2};
-            PublishNuGets("NuGet", apiKey, nuGetSettings, "./artifacts/*.nupkg");          
+            var nuGetSettings = new PublishNuGetsSettings(){ForcePush = true, MaxAttempts = 2};
+            PublishNuGets(feed.Name, apiKey, nuGetSettings, "./artifacts/*.nupkg");                    
 });
 
 
