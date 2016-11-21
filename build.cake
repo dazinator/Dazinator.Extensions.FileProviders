@@ -179,17 +179,12 @@ Task("__PublishNuGetPackages")
 
                 var apiKey = EnvironmentVariable("NuGetOrgApiKey");
 
-                 // Push the package.
+                 // Push the package. NOTE: this also pushes the symbols package alongside.
                 NuGetPush(nugetPackageName, new NuGetPushSettings {
                     Source = feed.Source,
                     ApiKey = apiKey
                 });
-
-                 // Push the source package.
-                NuGetPush(nugetSourcePackageName, new NuGetPushSettings {
-                    Source = feed.Source,
-                    ApiKey = apiKey
-                });            
+                    
             }  
 });
 
