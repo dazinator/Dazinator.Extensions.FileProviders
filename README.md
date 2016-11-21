@@ -1,12 +1,15 @@
+| Branch  | Build Status |
+| ------------- | ------------- |
+| Master  |[![Build master](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn/branch/master?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/master) |
+| Develop | [![Build develop](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/develop)  |
+
 # Dazinator.AspNet.Extensions.FileProviders
 
-[![Build status master](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn/branch/master?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/master)
+Provides some useful `IFileProvider` implementations for `asp.net core`.
+Current FileProvider Implementations include:
 
-[![Build status develop](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/develop)
-
-
-Provides some additonal `IFileProvider` implementations that others may find useful.
-
+- RequestPathFileProvider
+- InMemoryFileProvider
 
 ## RequestPathFileProvider 
 
@@ -24,3 +27,57 @@ You can do this:
 ```
 
 Now you can resolve exactly the same files and directories through the `RequestPathFileProvider` that the original `FileProvider` has, but you must do so using subpaths that have `/specialfiles` prepended.
+
+## InMemoryFileProvider 
+
+Allows you to provide files from an in memory directory.
+For example:
+
+```
+
+             // Arrange
+            var provider = new InMemoryFileProvider();
+            provider.Directory.AddFile("/some/path/", new StringFileInfo("file contents", "foo.txt"));
+            // Act
+            var fileInfo = provider.GetFileInfo("DoesNotExist.txt");
+
+            // Assert
+            Assert.NotNull(fileInfo);
+            Assert.False(fileInfo.Exists);
+
+```
+
+The file provider wraps an `IDirectory` which supports the kind of operations you would expect of a directory.
+You can set up the directory first, or perform operations on the `IDirectory` independent of the file provider.
+
+For example:
+
+```
+
+            // Arrange
+            IDirectory directory = new InMemoryDirectory();
+
+            // Act
+            // Adds the specified folder structure to this directory:
+            var folder = directory.GetOrAddFolder("/some/dir/folder");
+            
+            // could add / update, delete files in this directory etc.
+            Assert.NotNull(folder);
+
+            var provider = new InMemoryFileProvider(directory);           
+
+```
+
+You can add, update, delete files in the `IDirectory` as you might expect. You can use the `StringFileInfo` class which represents in memory file.
+
+The following adds a file to the directory at `/some/dir/foo.txt` with the contents "contents":
+
+
+```
+var file = directory.AddFile("/some/dir", new StringFileInfo("contents","foo.txt"));
+
+```
+
+The `InMemoryFileProvider` fully supports `watching` and change tokens. Which means if you add / update / delete a file or folder in the directory, the appropriate change tokens will be signalled.
+
+

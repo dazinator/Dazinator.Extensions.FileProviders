@@ -2,6 +2,12 @@
   "title": "Dazinator.AspNet.Extensions.FileProviders",
   "description": "Dazinator.AspNet.Extensions.FileProviders",
   "version": "0.1.0",
+  "authors": [ "Darrell Tunnell" ],  
+  "packOptions": {
+    "summary": "Additional File Provider implmentations for ASP.Net Core.",
+    "projectUrl": "https://github.com/dazinator/Dazinator.AspNet.Extensions.FileProviders"   
+
+  },
   "dependencies": {
     "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.0",
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",

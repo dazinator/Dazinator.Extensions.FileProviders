@@ -3,7 +3,13 @@
 //////////////////////////////////////////////////////////////////////
 #tool "nuget:?package=GitVersion.CommandLine"
 #tool "nuget:?package=GitReleaseNotes"
+#addin nuget:?package=Cake.Git
+#addin "Cake.ExtendedNuGet"
+#addin "nuget:?package=NuGet.Core&version=2.8.6"
 #addin "MagicChunks"
+
+
+
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -15,8 +21,10 @@ var configuration = Argument("configuration", "Release");
 // GLOBAL VARIABLES
 ///////////////////////////////////////////////////////////////////////////////
 var artifactsDir = "./artifacts";
+var projectName = "Dazinator.AspNet.Extensions.FileProviders";
 var globalAssemblyFile = "./src/GlobalAssemblyInfo.cs";
-var projectToPackage = "./src/Dazinator.AspNet.Extensions.FileProviders";
+var projectToPackage = $"./src/{projectName}";
+
 
 var isContinuousIntegrationBuild = !BuildSystem.IsLocalBuild;
 
@@ -51,7 +59,9 @@ Task("__Default")
     .IsDependentOn("__Test")
     .IsDependentOn("__UpdateProjectJsonVersion")
     .IsDependentOn("__Pack")
-    .IsDependentOn("__GenerateReleaseNotes");
+    .IsDependentOn("__GenerateReleaseNotes")
+    .IsDependentOn("__PublishNuGetPackages");
+    
 
 Task("__Clean")
     .Does(() =>
@@ -146,6 +156,42 @@ Task("__GenerateReleaseNotes")
 });
 
 
+Task("__PublishNuGetPackages")
+    .Does(() =>
+{              
+
+            if(isContinuousIntegrationBuild)
+            {
+
+                var nugetPackageName = $"{artifactsDir}/{projectName}.{nugetVersion}.nupkg";
+                var nugetSourcePackageName = $"{artifactsDir}/{projectName}.{nugetVersion}.symbols.nupkg";
+
+                var feed = new
+                    {
+                    Name = "NuGetOrg",
+                    Source = EnvironmentVariable("PUBLIC_NUGET_FEED_SOURCE")
+                };
+            
+                NuGetAddSource(
+                    name:feed.Name,
+                    source:feed.Source
+                );
+
+                var apiKey = EnvironmentVariable("NuGetOrgApiKey");
+
+                 // Push the package.
+                NuGetPush(nugetPackageName, new NuGetPushSettings {
+                    Source = feed.Source,
+                    ApiKey = apiKey
+                });
+
+                 // Push the source package.
+                NuGetPush(nugetSourcePackageName, new NuGetPushSettings {
+                    Source = feed.Source,
+                    ApiKey = apiKey
+                });            
+            }  
+});
 
 
 //////////////////////////////////////////////////////////////////////

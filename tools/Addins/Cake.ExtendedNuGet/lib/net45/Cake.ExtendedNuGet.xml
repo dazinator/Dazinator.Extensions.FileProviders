@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Cake.ExtendedNuGet</name>
+    </assembly>
+    <members>
+        <member name="T:Cake.ExtendedNuGet.NamespaceDoc">
+            <summary>
+            This namespace contain types
+            for getting NuGet package information
+            </summary>
+        </member>
+        <member name="T:Cake.ExtendedNuGet.ExtendedNuGetAliases">
+            <summary>
+            Extended NuGet Aliases
+            </summary>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.ExtendedNuGetAliases.GetNuGetPackageId(Cake.Core.ICakeContext,Cake.Core.IO.FilePath)">
+            <summary>
+            Gets the Package Id from a .nupkg file
+            </summary>
+            <returns>The package Id.</returns>
+            <param name="context">The context.</param>
+            <param name="file">The .nupkg file to read.</param>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.ExtendedNuGetAliases.GetNuGetPackageVersion(Cake.Core.ICakeContext,Cake.Core.IO.FilePath)">
+            <summary>
+            Gets the Package Version from a .nupkg file
+            </summary>
+            <returns>The package version.</returns>
+            <param name="context">The context.</param>
+            <param name="file">The .nupkg file to read.</param>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.ExtendedNuGetAliases.IsNuGetPublished(Cake.Core.ICakeContext,Cake.Core.IO.FilePath,System.String)">
+            <summary>
+            Determines if a .nupkg is already published at the given NuGet package source.
+            </summary>
+            <returns><c>true</c> if the .nupkg is published at the given NuGet package source.</returns>
+            <param name="context">The context.</param>
+            <param name="file">The .nupkg file.</param>
+            <param name="nugetSource">The NuGet package source.</param>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.ExtendedNuGetAliases.IsNuGetPublished(Cake.Core.ICakeContext,System.String,System.String,System.String)">
+            <summary>
+            Determines if a .nupkg is already published at the given NuGet package source.
+            </summary>
+            <returns><c>true</c> if the .nupkg is published at the given NuGet package source.</returns>
+            <param name="context">The context.</param>
+            <param name="packageId">The NuGet package Id.</param>
+            <param name="version">The NuGet package Version.</param>
+            <param name="nugetSource">The NuGet package source.</param>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.ExtendedNuGetAliases.IsNuGetPublished(Cake.Core.ICakeContext,System.String,NuGet.SemanticVersion,System.String)">
+            <summary>
+            Determines if a .nupkg is already published at the given NuGet package source.
+            </summary>
+            <returns><c>true</c> if the .nupkg is published at the given NuGet package source.</returns>
+            <param name="context">The context.</param>
+            <param name="packageId">The NuGet package Id.</param>
+            <param name="version">The NuGet package Version.</param>
+            <param name="nugetSource">The NuGet package source.</param>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.ExtendedNuGetAliases.PublishNuGets(Cake.Core.ICakeContext,System.String,System.String,Cake.ExtendedNuGet.PublishNuGetsSettings,System.String[])">
+            <summary>
+            Looks for and attempts to publish NuGet packages matching the globbing patterns
+            </summary>
+            <param name="context">The context.</param>
+            <param name="nugetSource">The NuGet Server.</param>
+            <param name="apiKey">The NuGet API key.</param>
+            <param name="settings">The settings.</param>
+            <param name="nupkgFileGlobbingPatterns">The file globbing patterns to find NuGet packages with.</param>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.ExtendedNuGetAliases.PublishNuGets(Cake.Core.ICakeContext,System.String,System.String,System.String,Cake.ExtendedNuGet.PublishNuGetsSettings,System.String[])">
+            <summary>
+            Looks for and attempts to publish NuGet packages matching the globbing patterns
+            </summary>
+            <param name="context">The context.</param>
+            <param name="readSource">The NuGet Server to check for existing packages on.</param>
+            <param name="publishSource">The NuGet Server to push packages to.</param>
+            <param name="apiKey">The NuGet API key.</param>
+            <param name="settings">The settings.</param>
+            <param name="nupkgFileGlobbingPatterns">The file globbing patterns to find NuGet packages with.</param>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.ExtendedNuGetAliases.GetPackageReferences(Cake.Core.ICakeContext,Cake.Core.IO.DirectoryPath)">
+            <summary>
+            NuGet project dependencies.
+            </summary>
+            <param name="context">
+            The <c>context</c>.
+            </param>
+            <param name="path">
+            A relative <see cref="T:Cake.Core.IO.DirectoryPath"/> where packages.config resides.
+            </param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IEnumerable`1"/>.
+            </returns>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.ExtendedNuGetAliases.GetPackageReference(Cake.Core.ICakeContext,Cake.Core.IO.DirectoryPath,System.String)">
+            <summary>
+            Get a NuGet project dependency by <paramref name="packageId"/>.
+            </summary>
+            <param name="context">
+            This <see cref="T:Cake.Core.ICakeContext"/>.
+            </param>
+            <param name="path">
+            A relative <see cref="T:Cake.Core.IO.DirectoryPath"/> where packages.config resides.
+            </param>
+            <param name="packageId">
+            The package Name.
+            </param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IEnumerable`1"/>.
+            </returns>
+        </member>
+        <member name="T:Cake.ExtendedNuGet.PublishNuGetsSettings">
+            <summary>
+            Settings for PublishNuGets alias
+            </summary>
+        </member>
+        <member name="M:Cake.ExtendedNuGet.PublishNuGetsSettings.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Cake.ExtendedNuGet.PublishNuGetsSettings"/> class.
+            </summary>
+        </member>
+        <member name="P:Cake.ExtendedNuGet.PublishNuGetsSettings.MaxAttempts">
+            <summary>
+            How many attempts should be made to publish before failing
+            </summary>
+            <value>The max attempts.</value>
+        </member>
+        <member name="P:Cake.ExtendedNuGet.PublishNuGetsSettings.ForcePush">
+            <summary>
+            Should a publish be attempted even if the server already has the same NuGet package version?
+            </summary>
+            <value><c>true</c> if force push; otherwise, <c>false</c>.</value>
+        </member>
+    </members>
+</doc>
