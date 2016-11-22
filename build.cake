@@ -9,8 +9,6 @@
 #addin "MagicChunks"
 
 
-
-
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
@@ -51,7 +49,8 @@ Teardown(context =>
 //  PRIVATE TASKS
 //////////////////////////////////////////////////////////////////////
 
-Task("__Default")
+Task("__Default")    
+    .IsDependentOn("__SetAppVeyorBuildNumber")
     .IsDependentOn("__Clean")
     .IsDependentOn("__Restore")
     .IsDependentOn("__UpdateAssemblyVersionInformation")
@@ -61,7 +60,6 @@ Task("__Default")
     .IsDependentOn("__Pack")
     .IsDependentOn("__GenerateReleaseNotes")
     .IsDependentOn("__PublishNuGetPackages");
-    
 
 Task("__Clean")
     .Does(() =>
@@ -69,6 +67,21 @@ Task("__Clean")
     CleanDirectory(artifactsDir);
     CleanDirectories("./src/**/bin");
     CleanDirectories("./src/**/obj");
+});
+
+Task("__SetAppVeyorBuildNumber")
+    .Does(() =>
+{
+    if (BuildSystem.AppVeyor.IsRunningOnAppVeyor)
+    {
+        var appVeyorBuildNumber = EnvironmentVariable("APPVEYOR_BUILD_NUMBER");
+        var appVeyorBuildVersion = $"{nugetVersion}+{appVeyorBuildNumber}";
+        BuildSystem.AppVeyor.UpdateBuildVersion(appVeyorBuildVersion);
+    }
+    else
+    {
+        Information("Not running on AppVeyor");
+    }    
 });
 
 Task("__Restore")
@@ -179,17 +192,12 @@ Task("__PublishNuGetPackages")
 
                 var apiKey = EnvironmentVariable("NuGetOrgApiKey");
 
-                 // Push the package.
+                 // Push the package. NOTE: this also pushes the symbols package alongside.
                 NuGetPush(nugetPackageName, new NuGetPushSettings {
                     Source = feed.Source,
                     ApiKey = apiKey
                 });
-
-                 // Push the source package.
-                NuGetPush(nugetSourcePackageName, new NuGetPushSettings {
-                    Source = feed.Source,
-                    ApiKey = apiKey
-                });            
+                    
             }  
 });
 
