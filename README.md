@@ -1,7 +1,7 @@
-| Branch  | Build Status |
-| ------------- | ------------- |
-| Master  |[![Build master](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn/branch/master?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/master) |
-| Develop | [![Build develop](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/develop)  |
+| Branch  | Build Status | NuGet |
+| ------------- | ------------- | ----- |
+| Master  |[![Build master](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn/branch/master?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/master) | [![NuGet](https://img.shields.io/nuget/v/Dazinator.AspNet.Extensions.FileProviders.svg)](https://www.nuget.org/packages/Dazinator.AspNet.Extensions.FileProviders/) |
+| Develop | [![Build develop](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/develop)  | [![NuGet](https://img.shields.io/nuget/vpre/Dazinator.AspNet.Extensions.FileProviders.svg)](https://www.nuget.org/packages/Dazinator.AspNet.Extensions.FileProviders/) |
 
 # Dazinator.AspNet.Extensions.FileProviders
 
