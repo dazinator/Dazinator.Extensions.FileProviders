@@ -39,11 +39,11 @@ For example:
             var provider = new InMemoryFileProvider();
             provider.Directory.AddFile("/some/path/", new StringFileInfo("file contents", "foo.txt"));
             // Act
-            var fileInfo = provider.GetFileInfo("DoesNotExist.txt");
+            var fileInfo = provider.GetFileInfo("/some/path/foo.txt");
 
             // Assert
             Assert.NotNull(fileInfo);
-            Assert.False(fileInfo.Exists);
+            Assert.True(fileInfo.Exists);
 
 ```
 
