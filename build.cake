@@ -22,6 +22,7 @@ var artifactsDir = "./artifacts";
 var projectName = "Dazinator.AspNet.Extensions.FileProviders";
 var globalAssemblyFile = "./src/GlobalAssemblyInfo.cs";
 var projectToPackage = $"./src/{projectName}";
+var repoBranchName = "master";
 
 
 var isContinuousIntegrationBuild = !BuildSystem.IsLocalBuild;
@@ -37,7 +38,7 @@ var nugetVersion = isContinuousIntegrationBuild ? gitVersionInfo.NuGetVersion : 
 ///////////////////////////////////////////////////////////////////////////////
 Setup(context =>
 {
-    Information("Building DotNetCoreBuild v{0}", nugetVersion);
+    Information("Building DotNetCoreBuild v{0}", nugetVersion);    
 });
 
 Teardown(context =>
@@ -76,6 +77,9 @@ Task("__SetAppVeyorBuildNumber")
     {
         var appVeyorBuildNumber = EnvironmentVariable("APPVEYOR_BUILD_NUMBER");
         var appVeyorBuildVersion = $"{nugetVersion}+{appVeyorBuildNumber}";
+        repoBranchName = EnvironmentVariable("APPVEYOR_REPO_BRANCH");
+        Information("AppVeyor branch name is " + repoBranchName);
+        Information("AppVeyor build version is " + appVeyorBuildVersion);
         BuildSystem.AppVeyor.UpdateBuildVersion(appVeyorBuildVersion);
     }
     else
@@ -157,12 +161,12 @@ Task("__GenerateReleaseNotes")
     {
         Configuration = "Release",
         OutputDirectory = $"{artifactsDir}"        
-    };
+    };    
             
     GitReleaseNotes($"{artifactsDir}/ReleaseNotes.md", new GitReleaseNotesSettings {
     WorkingDirectory         = ".",
     Verbose                  = true,       
-    RepoBranch               = "master",    
+    RepoBranch               = repoBranchName,    
     Version                  = nugetVersion,
     AllLabels                = true
 });
