@@ -41,12 +41,12 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         /// </summary>
         /// <param name="globPattern"></param>
         /// <returns></returns>
-        public static IEnumerable<IFileInfo> Search(this IFileProvider fileProvider, string globPattern)
+        public static IEnumerable<Tuple<string, IFileInfo>> Search(this IFileProvider fileProvider, string globPattern)
         {
             var results = new GlobMatchingEnumerableFileInfos(fileProvider, globPattern);
             return results;
         }
 
 
-    }
+}
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Dazinator.AspNet.Extensions.FileProviders
 {
-    public class GlobMatchingEnumerableFileInfos : IEnumerable<IFileInfo>
+    public class GlobMatchingEnumerableFileInfos : IEnumerable<Tuple<string, IFileInfo>>
     {
         private readonly IFileProvider _fileProvider;
         private readonly string _pattern;
@@ -19,7 +19,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders
             _pattern = pattern;
         }
 
-        public IEnumerator<IFileInfo> GetEnumerator()
+        public IEnumerator<Tuple<string, IFileInfo>> GetEnumerator()
         {
 
             var folders = new Stack<KeyValuePair<string, IFileInfo>>();
@@ -37,7 +37,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders
                     var isMatch = glob.IsMatch(itemPath);
                     if (isMatch)
                     {
-                        yield return item;
+                        yield return new Tuple<string, IFileInfo>(folderPath, item);
                     }
 
                     if (item.IsDirectory)
