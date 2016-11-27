@@ -169,5 +169,12 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         {
             this.Root.Accept(Visitor);
         }
+
+        public IFileDirectoryItem AddOrUpdateFile(string directory, IFileInfo file)
+        {
+            var folder = GetOrAddFolder(directory);
+            var result = folder.AddOrUpdateFile(file);
+            return result;
+        }
     }
 }

@@ -35,6 +35,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         event EventHandler<DirectoryItemAddedEventArgs> ItemAdded;
 
         bool RemoveItem(string name);
-       
+        IFileDirectoryItem AddOrUpdateFile(IFileInfo file);
     }
 }
