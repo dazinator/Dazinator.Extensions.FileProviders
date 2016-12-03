@@ -52,7 +52,83 @@ namespace FileProvider.Tests
             Assert.True(fileFound);
 
         }
-        
+
+        /// <summary>
+        /// Tests that the request path provider will handle requesting directory contents for subpaths that don't
+        /// start with a leading slash
+        /// </summary>
+        [Fact]
+        public void Can_Get_Directory_Contents_With_No_Leading_Slash()
+        {
+            // Arrange
+
+
+            var dir = System.IO.Directory.GetCurrentDirectory();
+            var physicalFileProvider = new PhysicalFileProvider(dir);
+
+            var sut = new RequestPathFileProvider("/somepath", physicalFileProvider);
+
+            // Act
+            var files = sut.GetDirectoryContents("somepath/TestDir/");
+
+            // Assert
+            bool subDirectoryFound = false;
+            bool fileFound = false;
+
+            foreach (var file in files)
+            {
+                if (file.IsDirectory == true)
+                {
+                    subDirectoryFound = true;
+                    Assert.Equal(file.Name, "AnotherFolder");
+                    continue;
+                }
+
+                if (file.Name == "TestFile.txt")
+                {
+                    fileFound = true;
+                }
+            }
+
+            Assert.True(subDirectoryFound);
+            Assert.True(fileFound);
+
+        }
+
+        /// <summary>
+        /// Tests that the request path provider will forward requests for directory contents starting with
+        /// a matching requets path, to an underlying file provider, removing request path information from the path.
+        /// </summary>
+        [Fact]
+        public void Can_Get_Root_Directory_Contents()
+        {
+            // Arrange
+
+
+            var dir = System.IO.Directory.GetCurrentDirectory();
+            var physicalFileProvider = new PhysicalFileProvider(dir);
+
+            var sut = new RequestPathFileProvider("/somepath", physicalFileProvider);
+
+            // Act
+            var files = sut.GetDirectoryContents("");
+
+            // Assert
+            bool rootDirectoryFound = false;
+          
+            foreach (var file in files)
+            {
+                if (file.IsDirectory == true)
+                {
+                    rootDirectoryFound = true;
+                    Assert.Equal(file.Name, "somepath");
+                    continue;
+                }
+            }
+
+            Assert.True(rootDirectoryFound);
+        }
+
         [Fact]
         public void Can_Watch_A_Single_File_For_Changes()
         {

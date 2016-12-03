@@ -22,10 +22,19 @@ namespace Dazinator.AspNet.Extensions.FileProviders
 
         protected virtual bool TryMapSubPath(string originalSubPath, out string newSubPath)
         {
-            if (originalSubPath != null)
+            if (!string.IsNullOrEmpty(originalSubPath))
             {
-                var originalSubPathString = new PathString(originalSubPath);
-                if (originalSubPathString.HasValue && originalSubPathString.StartsWithSegments(_basePath))
+                PathString originalPathString;
+                if (originalSubPath[0] != '/')
+                {
+                    originalPathString = new PathString('/' + originalSubPath);
+                }
+                else
+                {
+                    originalPathString = new PathString(originalSubPath);
+                }
+
+                if (originalPathString.HasValue && originalPathString.StartsWithSegments(_basePath))
                 {
                     var childPath = originalSubPath.Remove(0, _basePath.Value.Length);
                     newSubPath = childPath;
