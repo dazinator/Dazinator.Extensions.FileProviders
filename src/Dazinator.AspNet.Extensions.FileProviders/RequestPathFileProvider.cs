@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Dazinator.AspNet.Extensions.FileProviders.Directory;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
+using System.IO;
 
 namespace Dazinator.AspNet.Extensions.FileProviders
 {
@@ -12,11 +14,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders
 
         private readonly PathString _basePath;
         private readonly IFileProvider _underlyingFileProvider;
+        private readonly IFileInfo _baseDirectoryFileInfo;
+        private static readonly char[] _pathSeparators = new[]{Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar};
 
         public RequestPathFileProvider(string basePath, IFileProvider underlyingFileProvider)
         {
             _basePath = new PathString(basePath);
-            //_basePath = PathString.FromUriComponent(basePath);
+            _baseDirectoryFileInfo = new DirectoryFileInfo(_basePath.ToString().TrimStart(_pathSeparators));
             _underlyingFileProvider = underlyingFileProvider;
         }
 
@@ -48,6 +52,11 @@ namespace Dazinator.AspNet.Extensions.FileProviders
 
         public IDirectoryContents GetDirectoryContents(string subpath)
         {
+            if (string.IsNullOrEmpty(subpath))
+            {
+                // return root / base directory.
+                return new EnumerableDirectoryContents(_baseDirectoryFileInfo);
+            }
             string newPath;
             if (TryMapSubPath(subpath, out newPath))
             {

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.FileProviders;
+﻿using Dazinator.AspNet.Extensions.FileProviders.Directory;
+using Microsoft.Extensions.FileProviders;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,22 +8,22 @@ using System.Threading.Tasks;
 
 namespace Dazinator.AspNet.Extensions.FileProviders
 {
-    public class EnumerableDirectoryContents : IDirectoryContents
+    public class EnumerableFolderDirectoryContents : IDirectoryContents
     {
-        private readonly IFileInfo[] _files;
+        private readonly IFolderDirectoryItem _folder;
 
-        public EnumerableDirectoryContents(params IFileInfo[] files)
+        public EnumerableFolderDirectoryContents(IFolderDirectoryItem folder)
         {
-            _files = files;
+            _folder = folder;
         }
 
         public bool Exists => true;
 
         public IEnumerator<IFileInfo> GetEnumerator()
         {
-            foreach (var entry in _files)
+            foreach (var entry in _folder)
             {
-                yield return entry;
+                yield return entry.FileInfo;
             }
         }
 
