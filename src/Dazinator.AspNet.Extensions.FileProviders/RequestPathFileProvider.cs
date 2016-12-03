@@ -15,16 +15,16 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         private readonly PathString _basePath;
         private readonly IFileProvider _underlyingFileProvider;
         private readonly IFileInfo _baseDirectoryFileInfo;
-        private static readonly char[] _pathSeparators = new[]{Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar};
+        private static readonly char[] _splitChar = new char[1] { '/' };
 
         public RequestPathFileProvider(string basePath, IFileProvider underlyingFileProvider)
         {
             _basePath = new PathString(basePath);
-            _baseDirectoryFileInfo = new DirectoryFileInfo(_basePath.ToString().TrimStart(_pathSeparators));
+            _baseDirectoryFileInfo = new DirectoryFileInfo(_basePath.ToString().TrimStart(_splitChar));
             _underlyingFileProvider = underlyingFileProvider;
         }
 
-        protected virtual bool TryMapSubPath(string originalSubPath, out string newSubPath)
+        protected virtual bool TryMapSubPath(string originalSubPath, out PathString newSubPath)
         {
             if (!string.IsNullOrEmpty(originalSubPath))
             {
@@ -38,10 +38,11 @@ namespace Dazinator.AspNet.Extensions.FileProviders
                     originalPathString = new PathString(originalSubPath);
                 }
 
-                if (originalPathString.HasValue && originalPathString.StartsWithSegments(_basePath))
+                PathString remaining;
+                if (originalPathString.HasValue && originalPathString.StartsWithSegments(_basePath, out remaining))
                 {
-                    var childPath = originalSubPath.Remove(0, _basePath.Value.Length);
-                    newSubPath = childPath;
+                    // var childPath = originalPathString.Remove(0, _basePath.Value.Length);
+                    newSubPath = remaining;
                     return true;
                 }
             }
@@ -57,7 +58,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders
                 // return root / base directory.
                 return new EnumerableDirectoryContents(_baseDirectoryFileInfo);
             }
-            string newPath;
+            PathString newPath;
             if (TryMapSubPath(subpath, out newPath))
             {
                 var contents = _underlyingFileProvider.GetDirectoryContents(newPath);
@@ -69,7 +70,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders
 
         public IFileInfo GetFileInfo(string subpath)
         {
-            string newPath;
+            PathString newPath;
             if (TryMapSubPath(subpath, out newPath))
             {
                 var result = _underlyingFileProvider.GetFileInfo(newPath);
@@ -83,7 +84,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         {
             // We check if the pattern starts with the base path, and remove it if necessary.
             // otherwise we just pass the pattern through unaltered.
-            string newPath;
+            PathString newPath;
             if (TryMapSubPath(filter, out newPath))
             {
                 var result = _underlyingFileProvider.Watch(newPath);
