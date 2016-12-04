@@ -6,5 +6,6 @@ environment:
   PUBLIC_NUGET_FEED_SOURCE: https://www.nuget.org/
 build_script:
 - cmd: ./build.cmd
+test: off
 artifacts:
 - path: ./artifacts/*
