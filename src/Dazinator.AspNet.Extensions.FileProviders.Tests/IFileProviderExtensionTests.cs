@@ -25,6 +25,7 @@ namespace FileProvider.Tests
             directory.AddFile("/foo", new StringFileInfo("greetings", "bar.txt"));
             directory.AddFile("/foo", new StringFileInfo("another", "baz.txt"));
             directory.AddFile("/bar", new StringFileInfo("hi", "bar.txt"));
+            directory.AddFile("/foo", new StringFileInfo("foo", "bar.txt.min"));
 
             var testProvider = new InMemoryFileProvider(directory);
 
@@ -43,6 +44,9 @@ namespace FileProvider.Tests
 
         }
 
-      
+
+     
+
+
     }
 }

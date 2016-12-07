@@ -1,4 +1,4 @@
-﻿using Dazinator.AspNet.Extensions.FileProviders.Globbing;
+﻿using DotNet.Globbing;
 using Microsoft.Extensions.FileProviders;
 using System;
 using System.Collections;
@@ -23,7 +23,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         {
 
             var folders = new Stack<KeyValuePair<string, IFileInfo>>();
-            var glob = new Glob(_pattern);
+            var glob = Glob.Parse(_pattern);
 
             var folderPath = "";
             var currentFolder = _fileProvider.GetDirectoryContents("");
