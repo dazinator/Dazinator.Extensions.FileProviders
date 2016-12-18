@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "authors": [ "Darrell Tunnell" ],
   "packOptions": {
-    "summary": "Additional File Provider implmentations for ASP.Net Core.",
+    "summary": "Additional IFileProvider implementation for aspnet core, such as InMemoryFileProvider. Some IFileProvider extensions methods for efficient glob searching too.",
     "projectUrl": "https://github.com/dazinator/Dazinator.AspNet.Extensions.FileProviders",
-    "releaseNotes": "More file info implementations for use with the InMemoryFileProvider. Globbing now fatser. Some bug fixes."
+    "releaseNotes": "More file info implementations for use with the InMemoryFileProvider, including EmbeddedFileInfo. Search for files from any IFileProvider using a fast glob search with include and exclude patterns."
   },
   "dependencies": {
     "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.0",
