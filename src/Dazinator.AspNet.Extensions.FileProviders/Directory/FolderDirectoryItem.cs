@@ -68,6 +68,20 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             return newItem;
         }
 
+        public IFileDirectoryItem AddOrUpdateFile(IFileInfo file)
+        {
+            var existingItem = GetFileItem(file.Name);
+            if (existingItem == null)
+            {
+                return AddFile(file);
+            }
+            else
+            {
+                existingItem.Update(file);
+                return existingItem;
+            }
+        }
+
         /// <summary>
         /// Updates the existing item in the directory, overwriting it..
         /// </summary>
@@ -79,7 +93,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             existingItem.Update(file);
             return existingItem;
         }
-      
+
         public void ReplaceItem(IDirectoryItem existingItem, IFileInfo newItem)
         {
             if (Items.ContainsKey(newItem.Name))
@@ -130,7 +144,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             OnRaiseItemUpdated(oldItem);
         }
 
-        
+
         //public void OnUpdated(IFileInfo newFileInfo)
         //{
         //    var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
@@ -190,14 +204,20 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             }
         }
 
-        private IFileDirectoryItem GetFileItem(string path)
+        private IFileDirectoryItem GetFileItem(string name)
         {
-            var existingItem = NavigateToNext(path) as IFileDirectoryItem;
-            if (existingItem == null)
+            if (Items.ContainsKey(name))
             {
-                throw new InvalidOperationException("No such file exists.");
+                var existing = Items[name];
+                if (!existing.IsFolder)
+                {
+                    return existing as IFileDirectoryItem;
+                }
             }
-            return existingItem;
+
+            return null;
+
+            //throw new InvalidOperationException("No such file exists.");
         }
 
         /// <summary>

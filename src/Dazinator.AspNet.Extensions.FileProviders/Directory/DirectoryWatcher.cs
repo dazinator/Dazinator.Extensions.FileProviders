@@ -1,3 +1,4 @@
+using DotNet.Globbing;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -40,7 +41,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         //private readonly bool _autoWatchNewSubFolders;
         private ConcurrentDictionary<string, IDirectoryItem> _watchingFolders;
-        private List<Globbing.Glob> _Filters;
+        private List<Glob> _Filters;
         private VisitMode _visitMode;
         private bool _UnregisterWasSuccessful;
 
@@ -57,7 +58,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             // _autoWatchNewSubFolders = autoWatchNewSubFolders;
             _watchingFolders = new ConcurrentDictionary<string, IDirectoryItem>();
             _directory = directory;
-            _Filters = new List<Globbing.Glob>();
+            _Filters = new List<Glob>();
             _visitMode = VisitMode.Register;
             _directory.Accept(this); // visit all items in the directory and attach handlers for event notifications.
             // _pattern = pattern;
@@ -281,7 +282,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             {
                 if (filter.IsMatch(path))
                 {
-                    yield return filter.Pattern;
+                    yield return filter.ToString();
                 }
             }
         }
@@ -320,7 +321,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <param name="pattern"></param>
         public void AddFilter(string pattern)
         {
-            _Filters.Add(new Globbing.Glob(pattern));
+            _Filters.Add(Glob.Parse(pattern));
         }
 
         public void Dispose()

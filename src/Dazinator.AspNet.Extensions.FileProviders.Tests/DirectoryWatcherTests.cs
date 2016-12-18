@@ -139,7 +139,7 @@ namespace FileProvider.Tests
          
            // Watch the directory using a pattern as a filter.
             var watcher = new DirectoryWatcher(directory);
-            var watchPattern = "/some/dir/*/new*.txt";
+            var watchPattern = "/some/dir/**/new*.txt";
             watcher.AddFilter(watchPattern);
 
             // Register for the watchers ItemUpdated event, this is how it should notify us of updated

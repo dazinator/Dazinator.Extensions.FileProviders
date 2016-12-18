@@ -1,6 +1,6 @@
+using DotNet.Globbing;
 using System.Collections;
 using System.Collections.Generic;
-using Dazinator.AspNet.Extensions.FileProviders.Globbing;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
@@ -20,7 +20,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         {
 
             var folders = new Stack<IFolderDirectoryItem>();
-            var glob = new Glob(_pattern);
+            var glob = Glob.Parse(_pattern);
             var currentFolder = _rootFolder;
 
             while (currentFolder != null)

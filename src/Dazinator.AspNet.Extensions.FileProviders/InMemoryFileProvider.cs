@@ -109,12 +109,12 @@ namespace Dazinator.AspNet.Extensions.FileProviders
                 return NullChangeToken.Singleton;
             }
 
-            var subPath = SubPathInfo.Parse(filter);
-            var subPathString = subPath.ToString();
+           // var subPath = SubPathInfo.Parse(filter);
+            // var subPathString = subPath.ToString();
             // IChangeToken existing;
-            var resultToken = GetOrAddChangeToken(subPathString, (t) =>
+            var resultToken = GetOrAddChangeToken(filter, (t) =>
             {
-                DirectoryWatcher.AddFilter(subPathString);
+                DirectoryWatcher.AddFilter(filter);
             });
             return resultToken;
         }
