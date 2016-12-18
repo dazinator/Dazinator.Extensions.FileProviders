@@ -282,7 +282,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             {
                 if (filter.IsMatch(path))
                 {
-                    yield return filter.Pattern;
+                    yield return filter.ToString();
                 }
             }
         }

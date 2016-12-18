@@ -13,7 +13,7 @@
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
     "Microsoft.Extensions.FileProviders.Abstractions": "1.0.0",
     "NETStandard.Library": "1.6.0",
-    "DotNet.Glob": "1.0.1"
+    "DotNet.Glob": "1.4.1"
   },
   "tools": {
     "dotnet-gitversion": {
