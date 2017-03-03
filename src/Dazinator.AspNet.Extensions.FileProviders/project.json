@@ -8,12 +8,12 @@
     "projectUrl": "https://github.com/dazinator/Dazinator.AspNet.Extensions.FileProviders"   
 
   },
-  "dependencies": {    
+  "dependencies": {
     "Microsoft.AspNetCore.Hosting.Abstractions": "1.0.0",
     "Microsoft.AspNetCore.Http.Abstractions": "1.0.0",
     "Microsoft.Extensions.FileProviders.Abstractions": "1.0.0",
     "NETStandard.Library": "1.6.0",
-    "DotNet.Glob": "1.0.1"
+    "DotNet.Glob": "1.3.0-unstable0021"
   },
   "tools": {
     "dotnet-gitversion": {
@@ -24,7 +24,7 @@
     }
   },
   "frameworks": {
-    "netstandard1.6": {
+    "netstandard1.3": {
       "imports": "dnxcore50"
     },
     "net451": {}
