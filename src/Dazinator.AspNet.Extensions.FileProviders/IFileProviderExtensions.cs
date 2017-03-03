@@ -48,5 +48,27 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         }
 
 
-}
+        /// <summary>
+        /// returns all items in the directory that match the specified glob pattern.
+        /// </summary>
+        /// <param name="globPattern"></param>
+        /// <returns></returns>
+        public static IEnumerable<Tuple<string, IFileInfo>> Search(this IFileProvider fileProvider, params string[] includePatterns)
+        {
+            var results = new GlobMatchingEnumerableFileInfos(fileProvider, includePatterns);
+            return results;
+        }
+
+        /// <summary>
+        /// returns all items in the directory that match the specified glob pattern.
+        /// </summary>
+        /// <param name="globPattern"></param>
+        /// <returns></returns>
+        public static IEnumerable<Tuple<string, IFileInfo>> Search(this IFileProvider fileProvider, string[] includePatterns, params string[] excludePatterns)
+        {
+            var results = new GlobMatchingEnumerableFileInfos(fileProvider, includePatterns, excludePatterns);
+            return results;
+        }
+
+    }
 }

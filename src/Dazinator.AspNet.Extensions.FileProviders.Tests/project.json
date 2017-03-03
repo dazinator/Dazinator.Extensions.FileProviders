@@ -14,7 +14,8 @@
     "Dazinator.AspNet.Extensions.FileProviders": { "target": "project" }
   },
   "buildOptions": {
-    "copyToOutput": "TestDir\\"
+    "copyToOutput": "TestDir\\",
+    "embed": "Resources/*.*"
   },
   "frameworks": {
     "netcoreapp1.0": {
@@ -23,7 +24,8 @@
           "version": "1.0.0-*",
           "type": "platform"
         }
-      }
+      },
+      "buildOptions": { "define": [ "NETSTANDARD" ] }
     }
    
   }

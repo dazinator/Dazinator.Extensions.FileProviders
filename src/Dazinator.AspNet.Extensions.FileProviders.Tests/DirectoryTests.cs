@@ -323,18 +323,19 @@ namespace FileProvider.Tests
         [Theory]
         [InlineData("/some/dir/folder/file.txt|/some/dir/folder/file.csv", "/some/dir/folder/file.*", 2)]
         [InlineData("/file.txt|/folder/file.csv", "/*file.txt", 1)]
-        [InlineData("/file.txt|/folder/file.csv", "**/file.csv", 1)]
-        [InlineData("/file.txt|/folder/file.csv", "**/file.*", 2)]
+        [InlineData("/file.txt|/folder/file.csv", "/**/file.csv", 1)]
+        [InlineData("/file.txt|/folder/file.csv", "/**/file.*", 2)]       
+        [InlineData("/somefile.txt", "/somefile.txt", 1)]
         public void Can_Search_Directory(string files, string pattern, int expectedMatchCount)
         {
             // Arrange
-            IDirectory directory = BuildDirectoryWithTestFiles(files);
+            IDirectory directory = BuildInMemoryDirectoryWithTestFiles(files);
             var results = directory.Search(pattern).ToList();
             Assert.Equal(expectedMatchCount, results.Count);
         }
 
 
-        private IDirectory BuildDirectoryWithTestFiles(string filesInformation)
+        private IDirectory BuildInMemoryDirectoryWithTestFiles(string filesInformation)
         {
             var directory = new InMemoryDirectory();
             var filesArray = filesInformation.Split('|');
@@ -361,6 +362,8 @@ namespace FileProvider.Tests
 
             return directory;
         }
+
+     
 
     }
 }
