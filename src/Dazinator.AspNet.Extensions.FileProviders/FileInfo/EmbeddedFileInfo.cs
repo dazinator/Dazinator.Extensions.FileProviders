@@ -26,8 +26,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders.FileInfo
                 try
                 {
                     // try and get the last modified time by looking at the last write time of the assembly.
+#if !NETSTANDARD1_3
                     var fileInfo = new System.IO.FileInfo(assembly.Location);
                     return fileInfo.LastWriteTime;
+#else
+                    return DateTime.MinValue;
+#endif
+
                 }
                 catch (Exception)
                 {
