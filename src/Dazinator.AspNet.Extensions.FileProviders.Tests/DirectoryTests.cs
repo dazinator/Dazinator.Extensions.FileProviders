@@ -1,11 +1,8 @@
 ﻿using System;
 using Xunit;
 using Microsoft.Extensions.FileProviders;
-using System.IO;
-using System.Threading;
 using Dazinator.AspNet.Extensions.FileProviders.Directory;
 using Dazinator.AspNet.Extensions.FileProviders;
-using NuGet.Common;
 using System.Linq;
 
 namespace FileProvider.Tests
