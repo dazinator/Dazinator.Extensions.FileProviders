@@ -11,7 +11,7 @@
     <PackageReleaseNotes>More file info implementations for use with the InMemoryFileProvider, including EmbeddedFileInfo. Search for files from any IFileProvider using a fast glob search with include and exclude patterns.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/dazinator/Dazinator.AspNet.Extensions.FileProviders</PackageProjectUrl>
     <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
-    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.6' ">$(PackageTargetFallback);dnxcore50</PackageTargetFallback>
+    <!--<PackageTargetFallback>$(PackageTargetFallback);dotnet</PackageTargetFallback>-->  
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <DotNetCliToolReference Include="dotnet-gitversion" Version="*" />
+    <!--<DotNetCliToolReference Include="dotnet-gitversion" Version="*" />-->
   </ItemGroup>
 
 </Project>
