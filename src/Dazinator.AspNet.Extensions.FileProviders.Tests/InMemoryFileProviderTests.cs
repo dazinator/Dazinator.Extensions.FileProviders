@@ -1,7 +1,6 @@
 ﻿using Xunit;
 using Microsoft.Extensions.FileProviders;
 using Dazinator.AspNet.Extensions.FileProviders;
-using Microsoft.AspNetCore.Testing.xunit;
 using Dazinator.AspNet.Extensions.FileProviders.Directory;
 using System.IO;
 using System;

@@ -1,21 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{AF13217F-438B-45FE-A649-82A084ECFEDA}"
 	ProjectSection(SolutionItems) = preProject
 		..\appveyor.yml = ..\appveyor.yml
-		..\build.cake = ..\build.cake
-		..\build.cmd = ..\build.cmd
-		..\build.ps1 = ..\build.ps1
-		global.json = global.json
 		NuGet.config = NuGet.config
 	EndProjectSection
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Dazinator.AspNet.Extensions.FileProviders", "Dazinator.AspNet.Extensions.FileProviders\Dazinator.AspNet.Extensions.FileProviders.xproj", "{D92D27B0-0FC2-4A89-A809-0DC76F0ABD37}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dazinator.AspNet.Extensions.FileProviders", "Dazinator.AspNet.Extensions.FileProviders\Dazinator.AspNet.Extensions.FileProviders.csproj", "{D92D27B0-0FC2-4A89-A809-0DC76F0ABD37}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Dazinator.AspNet.Extensions.FileProviders.Tests", "Dazinator.AspNet.Extensions.FileProviders.Tests\Dazinator.AspNet.Extensions.FileProviders.Tests.xproj", "{7CC55CA1-2EE0-4398-86C7-68B763BE8569}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dazinator.AspNet.Extensions.FileProviders.Tests", "Dazinator.AspNet.Extensions.FileProviders.Tests\Dazinator.AspNet.Extensions.FileProviders.Tests.csproj", "{7CC55CA1-2EE0-4398-86C7-68B763BE8569}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
