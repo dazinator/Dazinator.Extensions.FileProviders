@@ -10,7 +10,6 @@
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-    <PackageTargetFallback>$(PackageTargetFallback);dotnet</PackageTargetFallback>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
