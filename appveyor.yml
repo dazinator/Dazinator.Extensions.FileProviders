@@ -4,7 +4,7 @@ environment:
 skip_tags: true
 install:
   - choco install gitversion.portable -pre -y
-  - cinst gitlink -y
+  - cinst gitlink -y -version 2.4.1
 image: Visual Studio 2017 
 assembly_info:
   patch: false
