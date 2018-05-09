@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net46;</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
     <AssemblyName>Dazinator.AspNet.Extensions.FileProviders.Tests</AssemblyName>
     <PackageId>Dazinator.AspNet.Extensions.FileProviders.Tests</PackageId>
     <!--<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>-->
@@ -11,7 +11,7 @@
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
     <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
     <PackageTargetFallback>$(PackageTargetFallback);dotnet</PackageTargetFallback>
-
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
