@@ -270,10 +270,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 EventHandler<DirectoryWatcherFilterMatchedEventArgs<DirectoryItemAddedEventArgs>> handler = ItemAdded;
                 handler?.Invoke(this, watcherArgs);
             }
-
-
-
-
         }
 
         private IEnumerable<string> GetMatchingFilters(string path)

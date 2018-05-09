@@ -284,7 +284,6 @@ namespace FileProvider.Tests
                 fileItem.Update(new StringFileInfo("modified content", "b.txt"));
                 Assert.True(callbackInvoked);
             }
-
         }
 
         [Fact]
@@ -319,6 +318,120 @@ namespace FileProvider.Tests
 
         }
 
+        [Fact]
+        public void WatchingWithEmptyStringArgumentShouldNotThrow()
+        {
+            // Arrange
+            var rootDir = new InMemoryDirectory("root");
+            using (var provider = new InMemoryFileProvider(rootDir))
+            {
+                // Act
+                var ex = Record.Exception(() =>
+                {
+                    provider.Watch("");
+                });
+                // Assert
+                Assert.Null(ex);
+            }
+        }
 
+        [Fact]
+        public void WatchingRootDirShouldTriggerAChangeOnAddingAFile()
+        {
+            // Arrange
+            var rootDir = new InMemoryDirectory("root");
+            using (var provider = new InMemoryFileProvider(rootDir))
+            {
+                var token = provider.Watch("");
+                var callbackInvoked = false;
+                token.RegisterChangeCallback(state =>
+                {
+                    callbackInvoked = true;
+                }, state: null);
+
+                // Act
+                // add a file at root/a.txt
+                var fileItem = rootDir.AddFile("", new StringFileInfo("some content", "b.txt"));
+
+                // Assert
+                Assert.True(token.HasChanged);
+                Assert.True(callbackInvoked);
+            }
+        }
+
+        [Fact]
+        public void WatchingRootDirShouldNotTriggerAChangeOnAddingAFileToSubDir()
+        {
+            // Arrange
+            var rootDir = new InMemoryDirectory("root");
+            var subDir = rootDir.GetOrAddFolder("SubDir");
+            using (var provider = new InMemoryFileProvider(rootDir))
+            {
+                var token = provider.Watch("");
+                var callbackInvoked = false;
+                token.RegisterChangeCallback(state =>
+                {
+                    callbackInvoked = true;
+                }, state: null);
+
+                // Act
+                // add a file at root/a.txt
+                var fileItem = subDir.AddFile(new StringFileInfo("some content", "b.txt"));
+
+                // Assert
+                Assert.False(token.HasChanged);
+                Assert.False(callbackInvoked);
+            }
+        }
+
+        [Fact]
+        public void WatchingSubDirShouldTriggerAChangeOnAddingAFile()
+        {
+            // Arrange
+            var rootDir = new InMemoryDirectory("root");
+            var subDir = rootDir.GetOrAddFolder("SubDir");
+            using (var provider = new InMemoryFileProvider(rootDir))
+            {
+                var token = provider.Watch("root/SubDir");
+                var callbackInvoked = false;
+                token.RegisterChangeCallback(state =>
+                {
+                    callbackInvoked = true;
+                }, state: null);
+
+                // Act
+                // add a file at root/a.txt
+                var fileItem = subDir.AddFile(new StringFileInfo("some content", "b.txt"));
+
+                // Assert
+                Assert.True(token.HasChanged);
+                Assert.True(callbackInvoked);
+            }
+        }
+
+        [Fact]
+        public void WatchingSubDirShouldNotTriggerAChangeOnAddingAFileToRootDir()
+        {
+            // Arrange
+            var rootDir = new InMemoryDirectory("root");
+            var subDir = rootDir.GetOrAddFolder("SubDir");
+            using (var provider = new InMemoryFileProvider(rootDir))
+            {
+                var token = provider.Watch("root/SubDir");
+                var callbackInvoked = false;
+                token.RegisterChangeCallback(state =>
+                {
+                    callbackInvoked = true;
+                }, state: null);
+
+                // Act
+                // add a file at root/a.txt
+                var fileItem = rootDir.AddFile("", new StringFileInfo("some content", "b.txt"));
+
+                // Assert
+                Assert.False(token.HasChanged);
+                Assert.False(callbackInvoked);
+            }
+        }
     }
 }

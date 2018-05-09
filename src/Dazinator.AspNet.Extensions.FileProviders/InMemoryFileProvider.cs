@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using Microsoft.Extensions.FileProviders;
 using Dazinator.AspNet.Extensions.FileProviders.Directory;
 using Microsoft.Extensions.Primitives;
@@ -112,6 +113,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders
            // var subPath = SubPathInfo.Parse(filter);
             // var subPathString = subPath.ToString();
             // IChangeToken existing;
+
+            if (!Path.HasExtension(filter))
+                filter += "*/*";
             var resultToken = GetOrAddChangeToken(filter, (t) =>
             {
                 DirectoryWatcher.AddFilter(filter);
