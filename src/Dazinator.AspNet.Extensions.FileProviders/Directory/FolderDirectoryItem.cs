@@ -242,7 +242,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             });
 
             return existing;
-        }     
+        }
 
         /// <summary>
         /// Adds an item to folder directory.
@@ -250,7 +250,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <param name="name"></param>
         /// <returns></returns>
         private IDirectoryItem AddOrUpdateItem(string name, IDirectoryItem newItem)
-        {          
+        {
 
             Items.AddOrUpdate(name, (n) =>
             {
@@ -294,7 +294,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         private bool AddItem(string name, IDirectoryItem newItem)
         {
-            return Items.TryAdd(name, newItem);
+            if (Items.TryAdd(name, newItem))
+            {
+                OnRaiseItemAdded(newItem);
+                return true;
+            }
+
+            return false;
         }
 
 

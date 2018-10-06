@@ -21,7 +21,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="1.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="1.0.2" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" Version="1.0.1" />
-    <PackageReference Include="DotNet.Glob" Version="2.0.3" />
+    <PackageReference Include="DotNet.Glob" Version="2.1.1" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">
