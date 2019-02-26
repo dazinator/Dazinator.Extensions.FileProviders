@@ -37,10 +37,19 @@ namespace FileProvider.Tests
             var results = testProvider.Search("/foo/*.txt").ToArray();
             Assert.NotNull(results);
             Assert.Equal(2, results.Length);
-            Assert.Equal(results[0].Item1, "/foo");
-            Assert.Equal(results[0].Item2.Name, "bar.txt");
-            Assert.Equal(results[1].Item1, "/foo");
-            Assert.Equal(results[1].Item2.Name, "baz.txt");
+
+            var fileA = results[0];
+            var fileB = results[1];
+
+            var expectedFileNames = new Dictionary<string, string> { { "bar.txt", "greetings" }, { "baz.txt", "another" } };
+
+            Assert.Equal("/foo", fileA.Item1);
+            Assert.Contains(fileA.Item2.Name, expectedFileNames.Keys);
+            Assert.Equal(expectedFileNames[fileA.Item2.Name], fileA.Item2.ReadAllContent());
+
+            Assert.Equal("/foo", fileB.Item1);
+            Assert.Contains(fileB.Item2.Name, expectedFileNames.Keys);
+            Assert.Equal(expectedFileNames[fileB.Item2.Name], fileB.Item2.ReadAllContent());
 
         }
 
