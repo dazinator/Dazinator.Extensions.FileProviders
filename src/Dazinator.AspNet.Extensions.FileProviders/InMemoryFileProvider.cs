@@ -121,8 +121,14 @@ namespace Dazinator.AspNet.Extensions.FileProviders
             }
             else
             {
-                // if its a file path, prefix it with a slash so its always relative to the root dir.
-                //if(!filter.StartsWith("/"))
+                if(filter.StartsWith("/"))
+                {
+                    filter = filter.Remove(0, 1);
+                }
+                // remove the "/" prefix as its always going to be relative to the root in our case.
+
+                ////if its a file path, prefix it with a slash so its always relative to the root dir.
+                //if (!filter.StartsWith("/"))
                 //{
                 //    filter = $"/{filter}";
                 //}

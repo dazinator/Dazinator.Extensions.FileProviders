@@ -275,8 +275,8 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         private IEnumerable<string> GetMatchingFilters(string path)
         {
 
-            // fix ignore prefixed "/"
-            if(path.StartsWith("/"))
+            // we don't need "/" as paths are always relative to the base path in our case.
+            if (path.StartsWith("/"))
             {
                 path = path.Remove(0, 1);
             }
@@ -325,6 +325,11 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <param name="pattern"></param>
         public void AddFilter(string pattern)
         {
+            // remove starting "/"
+            if(pattern.StartsWith("/"))
+            {
+                pattern = pattern.Remove(0, 1);
+            }
             _Filters.Add(Glob.Parse(pattern));
         }
 
