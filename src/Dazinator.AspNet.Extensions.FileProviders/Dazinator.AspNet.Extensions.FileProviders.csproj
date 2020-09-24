@@ -10,7 +10,7 @@
     <PackageId>Dazinator.AspNet.Extensions.FileProviders</PackageId>
     <PackageReleaseNotes>More file info implementations for use with the InMemoryFileProvider, including EmbeddedFileInfo. Search for files from any IFileProvider using a fast glob search with include and exclude patterns.</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/dazinator/Dazinator.AspNet.Extensions.FileProviders</PackageProjectUrl>
-    <NetStandardImplicitPackageVersion>1.6.0</NetStandardImplicitPackageVersion>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <!--<PackageTargetFallback>$(PackageTargetFallback);dotnet</PackageTargetFallback>-->  
     <GenerateAssemblyConfigurationAttribute>false</GenerateAssemblyConfigurationAttribute>
     <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
@@ -21,7 +21,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="1.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="1.0.2" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Abstractions" Version="1.0.1" />
-    <PackageReference Include="DotNet.Glob" Version="1.6.4" />
+    <PackageReference Include="DotNet.Glob" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">

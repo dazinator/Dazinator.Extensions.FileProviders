@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Microsoft.Extensions.FileProviders;
+using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.FileProviders;
 
 namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 {
@@ -20,7 +21,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         public FolderDirectoryItem(IFileInfo directoryFileInfo, IFolderDirectoryItem parentFolder)
             : this(directoryFileInfo, parentFolder, true)
         {
-            Items = new Dictionary<string, IDirectoryItem>();
+            Items = new ConcurrentDictionary<string, IDirectoryItem>();
         }
 
         protected FolderDirectoryItem(IFileInfo fileInfo, IFolderDirectoryItem parentFolder, bool listenToParent) : base(fileInfo, parentFolder, listenToParent)
@@ -34,16 +35,16 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             // or its existence changes, it effects us so we need to notify subscribers we have been affected!
             if ((e.OldItem.Path != e.NewItem.Path))
             {
-                var oldItem = new FolderDirectoryItem(this.FileInfo, e.OldItem as IFolderDirectoryItem, false);
+                FolderDirectoryItem oldItem = new FolderDirectoryItem(FileInfo, e.OldItem as IFolderDirectoryItem, false);
                 OnRaiseItemUpdated(oldItem);
             }
         }
 
         #region IFolderDirectoryItem
 
-        public Dictionary<string, IDirectoryItem> Items { get; set; }
+        public ConcurrentDictionary<string, IDirectoryItem> Items { get; set; }
 
-        public override bool IsFolder { get { return true; } }
+        public override bool IsFolder => true;
 
         /// <summary>
         /// Navigates to a folder within the current directory, and creates the folder if it doesn't already exist.
@@ -56,30 +57,28 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         }
 
         /// <summary>
-        ///Adds ther file to the folder, overwriting the file if it exists..
+        /// Adds ther file to the folder, overwriting the file if it exists..
         /// </summary>
         /// <param name="file"></param>
-        /// <returns></returns>
+        /// <returns></returns>       
         public IFileDirectoryItem AddFile(IFileInfo file)
         {
-            var name = file.Name;
-            var newItem = new FileDirectoryItem(file, this);
-            AddItem(name, newItem);
+            string name = file.Name;
+            FileDirectoryItem newItem = new FileDirectoryItem(file, this);
+            if (!AddItem(name, newItem))
+            {
+                throw new InvalidOperationException("Cannot add item to the directory, as an item with the same name already exists.");
+            }
             return newItem;
         }
 
         public IFileDirectoryItem AddOrUpdateFile(IFileInfo file)
         {
-            var existingItem = GetFileItem(file.Name);
-            if (existingItem == null)
-            {
-                return AddFile(file);
-            }
-            else
-            {
-                existingItem.Update(file);
-                return existingItem;
-            }
+
+            string name = file.Name;
+            FileDirectoryItem newItem = new FileDirectoryItem(file, this);
+            AddOrUpdateItem(name, newItem);
+            return newItem;
         }
 
         /// <summary>
@@ -89,7 +88,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <returns></returns>
         public IFileDirectoryItem UpdateFile(IFileInfo file)
         {
-            var existingItem = GetFileItem(file.Name);
+            IFileDirectoryItem existingItem = GetFileItem(file.Name);
             existingItem.Update(file);
             return existingItem;
         }
@@ -103,54 +102,35 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
             if (existingItem != null)
             {
-                Items.Remove(existingItem.Name);
+                Items.TryRemove(existingItem.Name, out IDirectoryItem removedItem);
             }
+
             Items[newItem.Name] = existingItem;
             existingItem.ApplyUpdate(newItem);
 
         }
 
-        //public void OnRenamed(string newName)
-        //{
-        //    var newDirItem = new DirectoryFileInfo(newName);
-        //    Update(newDirItem);
-        //}
-
         public override void Update(IFileInfo newFileInfo)
         {
 
-            if (this.ParentFolder != null)
+            if (ParentFolder != null)
             {
                 if (FileInfo.Name != newFileInfo.Name)
                 {
-                    this.ParentFolder.ReplaceItem(this, newFileInfo);
+                    ParentFolder.ReplaceItem(this, newFileInfo);
                     return;
-                    //  OnRenamed(oldItem.Name, newFileInfo.Name);
                 }
-                // Update(newDirItem);
             }
 
             ApplyUpdate(newFileInfo);
-
-            //var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
-            //FileInfo = newFileInfo;
-            //OnRaiseItemUpdated(oldItem);
         }
 
         public override void ApplyUpdate(IFileInfo newFileInfo)
         {
-            var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
+            FolderDirectoryItem oldItem = new FolderDirectoryItem(FileInfo, ParentFolder, false);
             FileInfo = newFileInfo;
             OnRaiseItemUpdated(oldItem);
         }
-
-
-        //public void OnUpdated(IFileInfo newFileInfo)
-        //{
-        //    var oldItem = new FolderDirectoryItem(this.FileInfo, this.ParentFolder, false);
-        //    FileInfo = newFileInfo;
-        //    OnRaiseItemUpdated(oldItem);
-        //}
 
         /// <summary>
         /// Deletes an empty folder.
@@ -175,12 +155,11 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
                 }
             }
 
-
-            foreach (var item in Items.ToArray()) // We ToArray because Items gets modified during a Delete() call.
+            foreach (KeyValuePair<string, IDirectoryItem> item in Items.ToArray()) // We ToArray because Items gets modified during a Delete() call.
             {
                 if (item.Value.IsFolder)
                 {
-                    var folder = item.Value as IFolderDirectoryItem;
+                    IFolderDirectoryItem folder = item.Value as IFolderDirectoryItem;
                     if (folder != null)
                     {
                         folder.Delete(recursive);
@@ -193,9 +172,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             }
 
             //the parent calls on deleted once the child is removed.
-            if (this.ParentFolder != null)
+            if (ParentFolder != null)
             {
-                this.ParentFolder.RemoveItem(this.Name);
+                ParentFolder.RemoveItem(Name);
             }
             else
             {
@@ -208,7 +187,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         {
             if (Items.ContainsKey(name))
             {
-                var existing = Items[name];
+                IDirectoryItem existing = Items[name];
                 if (!existing.IsFolder)
                 {
                     return existing as IFileDirectoryItem;
@@ -216,8 +195,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             }
 
             return null;
-
-            //throw new InvalidOperationException("No such file exists.");
         }
 
         /// <summary>
@@ -229,7 +206,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         {
             if (name.Equals(".."))
             {
-                return this.ParentFolder;
+                return ParentFolder;
             }
 
             if (name.Equals("."))
@@ -239,7 +216,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
             if (Items.ContainsKey(name))
             {
-                var existing = Items[name];
+                IDirectoryItem existing = Items[name];
                 return existing;
             }
 
@@ -256,59 +233,76 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <returns></returns>
         private IDirectoryItem GetOrAddItem(string name, Func<string, IDirectoryItem> createItemCallback)
         {
-            if (Items.ContainsKey(name))
+
+            IDirectoryItem existing = Items.GetOrAdd(name, (n) =>
             {
-                var existing = Items[name];
-                return existing;
-            }
+                IDirectoryItem newFolder = createItemCallback(n);
+                OnRaiseItemAdded(newFolder);
+                return newFolder;
+            });
 
-            var newItem = createItemCallback(name);
-            Items.Add(name, newItem);
-            OnRaiseItemAdded(newItem);
-            return newItem;
+            return existing;
         }
-
-        ///// <summary>
-        ///// Updates an existing item in the folder.
-        ///// </summary>
-        ///// <param name="name"></param>
-        ///// <param name="updatedItem"></param>
-        ///// <returns></returns>
-        //private IDirectoryItem UpdateItem(string name, IDirectoryItem updatedItem)
-        //{
-        //    var existingItem = GetChildDirectoryItem(name);
-        //    if (existingItem == null)
-        //    {
-        //        throw new InvalidOperationException("No such item exists.");
-        //    }
-
-        //    if (!existingItem.IsFolder)
-        //    {
-        //        var file = existingItem as IFile
-        //    }
-
-        //    Items[name] = updatedItem;
-        //    OnRaiseItemUpdated(existingItem, updatedItem);
-        //    return updatedItem;
-        //}
 
         /// <summary>
         /// Adds an item to folder directory.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        private IDirectoryItem AddItem(string name, IDirectoryItem newItem)
+        private IDirectoryItem AddOrUpdateItem(string name, IDirectoryItem newItem)
         {
-            if (Items.ContainsKey(name))
+
+            Items.AddOrUpdate(name, (n) =>
             {
-                throw new InvalidOperationException("Cannot add item to the directory, as an item with the same name already exists.");
+                OnRaiseItemAdded(newItem);
+                return newItem;
+            }, (s, existing) =>
+            {
+                if (existing.IsFolder)
+                {
+                    IFolderDirectoryItem existingFolder = (IFolderDirectoryItem)existing;
+                    if (newItem.IsFolder)
+                    {
+                        IFolderDirectoryItem newFolder = (IFolderDirectoryItem)newItem;
+                        foreach (IDirectoryItem newFile in newFolder)
+                        {
+                            existingFolder.AddOrUpdateFile(newFile.FileInfo);
+                        }
+                    }
+                    else
+                    {
+                        existingFolder.AddOrUpdateFile(newItem.FileInfo);
+                    }
+                }
+                else
+                {
+                    if (newItem.IsFolder)
+                    {
+                        throw new Exception("Cannot add folder to directory as a file already exists with the same name.");
+                    }
+                    else
+                    {
+                        IFileDirectoryItem existingFileItem = (IFileDirectoryItem)existing;
+                        existingFileItem.Update(newItem.FileInfo);
+                    }
+                }
+                return existing;
+            });
 
-            }
-
-            Items.Add(name, newItem);
-            OnRaiseItemAdded(newItem);
             return newItem;
         }
+
+        private bool AddItem(string name, IDirectoryItem newItem)
+        {
+            if (Items.TryAdd(name, newItem))
+            {
+                OnRaiseItemAdded(newItem);
+                return true;
+            }
+
+            return false;
+        }
+
 
         /// <summary>
         /// Removes an item from the folder directory.
@@ -317,15 +311,15 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         /// <returns></returns>
         public bool RemoveItem(string name)
         {
-            var existing = Items[name];
+            IDirectoryItem existing = Items[name];
 
             // todo: could put in check here for deleting folders with items.. rather than in delete method.
-
-            var result = Items.Remove(name);
+            bool result = Items.TryRemove(name, out IDirectoryItem removed);
             if (result)
             {
                 existing.OnRemoved();
             }
+
             return result;
         }
 
@@ -339,7 +333,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
             // Event will be null if there are no subscribers
             if (handler != null)
             {
-                var args = new DirectoryItemAddedEventArgs(newItem);
+                DirectoryItemAddedEventArgs args = new DirectoryItemAddedEventArgs(newItem);
 
                 // Use the () operator to raise the event.
                 handler(this, args);
@@ -349,10 +343,6 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         public override void Accept(BaseDirectoryVisitor Visitor)
         {
             Visitor.Visit(this);
-
-            // visit children?
-            // allow visitor to decide.
-
         }
 
         #endregion

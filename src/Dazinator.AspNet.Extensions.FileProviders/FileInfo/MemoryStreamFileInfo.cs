@@ -15,13 +15,9 @@ namespace Dazinator.AspNet.Extensions.FileProviders.FileInfo
         private Lazy<long> _lazyLength;
 
         private Object _lock = new object();
-
-        private Encoding _encoding;
-
-        public MemoryStreamFileInfo(MemoryStream contents, Encoding encoding, string name)
+        public MemoryStreamFileInfo(MemoryStream contents, string name)
         {
-            _stream = contents;
-            _encoding = encoding;
+            _stream = contents;            
             LastModified = DateTimeOffset.UtcNow;
             IsDirectory = false;
             Name = name;

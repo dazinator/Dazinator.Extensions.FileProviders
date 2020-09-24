@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.IO;
 using Microsoft.Extensions.FileProviders;
 using Dazinator.AspNet.Extensions.FileProviders.Directory;
 using Microsoft.Extensions.Primitives;
@@ -112,6 +113,26 @@ namespace Dazinator.AspNet.Extensions.FileProviders
            // var subPath = SubPathInfo.Parse(filter);
             // var subPathString = subPath.ToString();
             // IChangeToken existing;
+
+            if (!Path.HasExtension(filter))
+            {
+                // when watching a folder path, we watch any folders starting with that path, including all the items in those folders (but stop there i.e 1 level deep).
+                filter += "*/*";
+            }
+            else
+            {
+                if(filter.StartsWith("/"))
+                {
+                    filter = filter.Remove(0, 1);
+                }
+                // remove the "/" prefix as its always going to be relative to the root in our case.
+
+                ////if its a file path, prefix it with a slash so its always relative to the root dir.
+                //if (!filter.StartsWith("/"))
+                //{
+                //    filter = $"/{filter}";
+                //}
+            }
             var resultToken = GetOrAddChangeToken(filter, (t) =>
             {
                 DirectoryWatcher.AddFilter(filter);
