@@ -4,6 +4,9 @@ using Dazinator.AspNet.Extensions.FileProviders;
 using Dazinator.AspNet.Extensions.FileProviders.Directory;
 using System.IO;
 using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using System.Threading;
 
 namespace FileProvider.Tests
 {
@@ -433,5 +436,65 @@ namespace FileProvider.Tests
                 Assert.False(callbackInvoked);
             }
         }
+
+
+
+       
+
+        [Theory]
+        [InlineData("", "appsettings.json")]
+        [InlineData("/", "appsettings.json")]
+        [InlineData("", "/appsettings.json", Skip = "Throws, not sure why yet")]
+        [InlineData("/", "/appsettings.json", Skip = "Throws, not sure why yet")]
+        public void Scenario_ConfigurationReloadTokensWork(string rootPath, string addjsonFilePath)
+        {
+
+            // Arrange
+            var testFileProvider = new InMemoryFileProvider();
+            testFileProvider.Directory.AddFile(rootPath, new StringFileInfo("{ \"Foo\": true }", "appsettings.json"));
+
+
+            var services = new ServiceCollection();
+
+            var configBuilder = new ConfigurationBuilder();
+            //configBuilder.SetBasePath(Directory.GetCurrentDirectory());
+            configBuilder.SetFileProvider(testFileProvider);
+
+            configBuilder.AddJsonFile(addjsonFilePath, optional: false, reloadOnChange: true);
+
+            IConfiguration config = configBuilder.Build();
+            services.AddSingleton(config);
+
+            var serviceProvider = services.BuildServiceProvider();
+            //var childServiceProvider = services.CreateChildServiceProvider(serviceProvider, (childServices) =>
+            //{
+            //    // don't add any additional child registrations. so IConfiguration is purely in parent scope.
+            //});
+
+
+            var configInstance = serviceProvider.GetRequiredService<IConfiguration>();
+            var reloadToken = configInstance.GetReloadToken();
+
+
+            var waitHandle = new ManualResetEvent(false);
+            reloadToken.RegisterChangeCallback((state) =>
+            {
+                waitHandle.Set();
+            }, null);
+
+
+            var configValue = configInstance["Foo"];
+            Assert.Equal("True", configValue);
+
+
+            // trigger reload token
+            testFileProvider.Directory.AddOrUpdateFile(rootPath, new StringFileInfo("{ \"Foo\": false }", "appsettings.json"));
+            Assert.True(waitHandle.WaitOne(TimeSpan.FromSeconds(5)));
+
+            configValue = configInstance["Foo"];
+            Assert.Equal("False", configValue);
+        }
+
+
     }
 }

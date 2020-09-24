@@ -274,6 +274,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
 
         private IEnumerable<string> GetMatchingFilters(string path)
         {
+
+            // fix ignore prefixed "/"
+            if(path.StartsWith("/"))
+            {
+                path = path.Remove(0, 1);
+            }
+
             foreach (var filter in _Filters)
             {
                 if (filter.IsMatch(path))
@@ -287,6 +294,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders.Directory
         {
             // Only raise the event if the old or new item (i.e file or folder could have been renamed)
             // matches a pattern.
+           
             var newItemMatches = GetMatchingFilters(args.NewItem.Path).ToArray();
             var oldItemMatches = GetMatchingFilters(args.OldItem.Path).ToArray();
             var unionMatches = newItemMatches.Union(oldItemMatches).ToArray();

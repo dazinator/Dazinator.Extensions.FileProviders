@@ -115,7 +115,18 @@ namespace Dazinator.AspNet.Extensions.FileProviders
             // IChangeToken existing;
 
             if (!Path.HasExtension(filter))
+            {
+                // when watching a folder path, we watch any folders starting with that path, including all the items in those folders (but stop there i.e 1 level deep).
                 filter += "*/*";
+            }
+            else
+            {
+                // if its a file path, prefix it with a slash so its always relative to the root dir.
+                //if(!filter.StartsWith("/"))
+                //{
+                //    filter = $"/{filter}";
+                //}
+            }
             var resultToken = GetOrAddChangeToken(filter, (t) =>
             {
                 DirectoryWatcher.AddFilter(filter);
