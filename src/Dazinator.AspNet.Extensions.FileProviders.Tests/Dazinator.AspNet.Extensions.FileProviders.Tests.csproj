@@ -33,7 +33,7 @@
     
     <PackageReference Include="Microsoft.AspNetCore.Testing" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Composite" Version="1.0.1" />
-    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="1.0.1" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="3.1.9" />
     <PackageReference Include="Microsoft.AspNetCore.NodeServices" Version="1.0.0-beta-000007" />
     <PackageReference Include="Microsoft.AspNetCore.TestHost" Version="1.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="1.0.2" />
