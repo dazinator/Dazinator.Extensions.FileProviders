@@ -4,22 +4,22 @@ using System.Collections.Generic;
 
 namespace Dazinator.AspNet.Extensions.FileProviders
 {
-    public class EnumerableDirectoryContents : IDirectoryContents
+    public class GlobMatchingEnumerableDirectoryContents : IDirectoryContents
     {
-        private readonly IFileInfo[] _files;
+        private readonly GlobMatchingEnumerableFileInfos _globAllowedFiles;
 
-        public EnumerableDirectoryContents(params IFileInfo[] files)
+        public GlobMatchingEnumerableDirectoryContents(GlobMatchingEnumerableFileInfos globAllowedFiles)
         {
-            _files = files;
+            _globAllowedFiles = globAllowedFiles;
         }
 
         public bool Exists => true;
 
         public IEnumerator<IFileInfo> GetEnumerator()
-        {
-            foreach (var entry in _files)
+        {         
+            foreach (var entry in _globAllowedFiles)
             {
-                yield return entry;
+                yield return entry.Item2;
             }
         }
 

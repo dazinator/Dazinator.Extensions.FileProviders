@@ -1,7 +1,10 @@
 ﻿using Dazinator.AspNet.Extensions.FileProviders.Directory;
+using DotNet.Globbing;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
+using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Dazinator.AspNet.Extensions.FileProviders

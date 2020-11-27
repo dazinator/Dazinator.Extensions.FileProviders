@@ -10,6 +10,7 @@ Current FileProvider Implementations include:
 
 - RequestPathFileProvider
 - InMemoryFileProvider
+- GlobPatternFilterFileProvider
 
 ## RequestPathFileProvider 
 
@@ -80,4 +81,28 @@ var file = directory.AddFile("/some/dir", new StringFileInfo("contents","foo.txt
 
 The `InMemoryFileProvider` fully supports `watching` and change tokens. Which means if you add / update / delete a file or folder in the directory, the appropriate change tokens will be signalled.
 
+## GlobPatternFilterFileProvider
 
+Allows you to wrap an existing `IFileProvider` but specify a list of include / exclude `glob` patterns to filter the files available through that file provider.
+
+This allows you to only allow certain folders and files to become accessible from the underlying provider.
+
+Example:
+
+```
+
+            var dir = System.IO.Directory.GetCurrentDirectory();
+            var physicalFileProvider = new PhysicalFileProvider(dir); // underlying file provider.
+
+            var includeGlob = "/TestDir/AnotherFolder/**";
+            var sut = new GlobPatternFilterFileProvider(physicalFileProvider, new string[] { includeGlob });
+
+            // Act
+            var file = sut.GetFileInfo("/TestDir/TestFile.txt"); // this file exists in the underlying provider but is being filtered out.
+            Assert.False(file.Exists);
+
+            file = sut.GetFileInfo("/TestDir/AnotherFolder/AnotherTestFile.txt");
+            Assert.True(file.Exists);         
+```
+
+Note: you can pass in an array of both `include` and `exclude` glob expressions. Glob evaluation is done via the `DotNet.Glob` dependency.

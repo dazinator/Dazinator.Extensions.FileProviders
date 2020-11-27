@@ -37,13 +37,13 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         }
 
         /// <summary>
-        /// returns all items in the directory that match the specified glob pattern.
+        /// returns all items in the directory that match the specified glob pattern, starting from <paramref name="startDir"/>.
         /// </summary>
         /// <param name="globPattern"></param>
         /// <returns></returns>
         public static IEnumerable<Tuple<string, IFileInfo>> Search(this IFileProvider fileProvider, string globPattern)
         {
-            var results = new GlobMatchingEnumerableFileInfos(fileProvider, globPattern);
+            var results = new GlobMatchingEnumerableFileInfos("", true, fileProvider, globPattern);
             return results;
         }
 
@@ -55,9 +55,10 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         /// <returns></returns>
         public static IEnumerable<Tuple<string, IFileInfo>> Search(this IFileProvider fileProvider, params string[] includePatterns)
         {
-            var results = new GlobMatchingEnumerableFileInfos(fileProvider, includePatterns);
+            var results = new GlobMatchingEnumerableFileInfos("", true, fileProvider, includePatterns);
             return results;
         }
+     
 
         /// <summary>
         /// returns all items in the directory that match the specified glob pattern.
@@ -66,7 +67,7 @@ namespace Dazinator.AspNet.Extensions.FileProviders
         /// <returns></returns>
         public static IEnumerable<Tuple<string, IFileInfo>> Search(this IFileProvider fileProvider, string[] includePatterns, params string[] excludePatterns)
         {
-            var results = new GlobMatchingEnumerableFileInfos(fileProvider, includePatterns, excludePatterns);
+            var results = new GlobMatchingEnumerableFileInfos("", true, fileProvider, includePatterns, excludePatterns);
             return results;
         }
 
