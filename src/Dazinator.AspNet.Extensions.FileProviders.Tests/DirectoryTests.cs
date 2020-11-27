@@ -1,11 +1,10 @@
 ﻿using System;
 using Xunit;
 using Microsoft.Extensions.FileProviders;
-using Dazinator.AspNet.Extensions.FileProviders.Directory;
-using Dazinator.AspNet.Extensions.FileProviders;
 using System.Linq;
+using Dazinator.Extensions.FileProviders.InMemory.Directory;
 
-namespace FileProvider.Tests
+namespace Dazinator.Extensions.FileProviders.Tests
 {
     public class DirectoryTests
     {
@@ -16,7 +15,6 @@ namespace FileProvider.Tests
         public void Can_Add_Then_Retrieve_A_File()
         {
             // Arrange
-
             IDirectory directory = new InMemoryDirectory();
             var fileContents = "greetings!";
             IFileInfo fileInfo = new StringFileInfo(fileContents, "hello.txt");
@@ -30,7 +28,6 @@ namespace FileProvider.Tests
             var retrievedFile = directory.GetFile("/foo/hello.txt");
             Assert.NotNull(retrievedFile);
             Assert.Equal(fileInfo, retrievedFile.FileInfo);
-
         }
 
         [Fact]

@@ -1,14 +1,14 @@
 ﻿using Xunit;
 using Microsoft.Extensions.FileProviders;
-using Dazinator.AspNet.Extensions.FileProviders;
-using Dazinator.AspNet.Extensions.FileProviders.Directory;
 using System.IO;
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using System.Threading;
+using Dazinator.Extensions.FileProviders.InMemory;
+using Dazinator.Extensions.FileProviders.InMemory.Directory;
 
-namespace FileProvider.Tests
+namespace Dazinator.Extensions.FileProviders.Tests
 {
     public class InMemoryFileProviderTests
     {

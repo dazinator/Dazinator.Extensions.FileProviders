@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Dazinator.AspNet.Extensions.FileProviders
+namespace Dazinator.Extensions.FileProviders
 {
     public class EnumerableDirectoryContents : IDirectoryContents
     {

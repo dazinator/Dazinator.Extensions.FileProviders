@@ -1,10 +1,9 @@
-﻿using Dazinator.AspNet.Extensions.FileProviders;
-using Dazinator.AspNet.Extensions.FileProviders.FileInfo;
+﻿using Dazinator.Extensions.FileProviders.InMemory;
 using System;
 using System.Reflection;
 using Xunit;
 
-namespace FileProvider.Tests
+namespace Dazinator.Extensions.FileProviders.Tests
 {
 
 

@@ -1,13 +1,10 @@
-﻿using Dazinator.AspNet.Extensions.FileProviders;
-using Dazinator.AspNet.Extensions.FileProviders.Directory;
-using Microsoft.Extensions.FileProviders;
-using System;
+﻿using Dazinator.Extensions.FileProviders.InMemory;
+using Dazinator.Extensions.FileProviders.InMemory.Directory;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Xunit;
 
-namespace FileProvider.Tests
+namespace Dazinator.Extensions.FileProviders.Tests
 {
     public class IFileProviderExtensionTests
     {

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Linq;
-using Microsoft.Extensions.Primitives;
-using Xunit;
+﻿using Xunit;
 using Microsoft.Extensions.FileProviders;
-using Dazinator.AspNet.Extensions.FileProviders;
 using System.IO;
-using System.Threading;
+using Dazinator.Extensions.FileProviders.GlobPatternFilter;
 
-namespace FileProvider.Tests
+namespace Dazinator.Extensions.FileProviders.Tests
 {
     public class GlobPatternFilterFileProviderTests
     {

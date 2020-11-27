@@ -1,10 +1,7 @@
-﻿using System;
-using Dazinator.AspNet.Extensions.FileProviders.Directory;
-using Microsoft.Extensions.FileProviders;
+﻿using Dazinator.Extensions.FileProviders.InMemory.Directory;
 using Xunit;
-using Dazinator.AspNet.Extensions.FileProviders;
 
-namespace FileProvider.Tests
+namespace Dazinator.Extensions.FileProviders.Tests
 {
     public class DirectoryWatcherTests
     {
