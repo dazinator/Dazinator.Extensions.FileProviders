@@ -29,8 +29,12 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
-  <ItemGroup>
-    <!--<DotNetCliToolReference Include="dotnet-gitversion" Version="*" />-->
+  <ItemGroup><!--<DotNetCliToolReference Include="dotnet-gitversion" Version="*" />-->
+  
+    <PackageReference Update="Microsoft.SourceLink.GitHub" Version="1.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
