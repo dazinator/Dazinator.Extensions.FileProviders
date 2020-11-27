@@ -1,32 +1,33 @@
 | Branch  | Build Status | NuGet |
 | ------------- | ------------- | ----- |
-| Master  |[![Build master](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn/branch/master?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/master) | [![NuGet](https://img.shields.io/nuget/v/Dazinator.AspNet.Extensions.FileProviders.svg)](https://www.nuget.org/packages/Dazinator.AspNet.Extensions.FileProviders/) |
-| Develop | [![Build develop](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-aspnet-extensions-fileproviders/branch/develop)  | [![NuGet](https://img.shields.io/nuget/vpre/Dazinator.AspNet.Extensions.FileProviders.svg)](https://www.nuget.org/packages/Dazinator.AspNet.Extensions.FileProviders/) |
+| Master  |[![Build master](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn/branch/master?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-extensions-fileproviders/branch/master) | [![NuGet](https://img.shields.io/nuget/v/Dazinator.Extensions.FileProviders.svg)](https://www.nuget.org/packages/Dazinator.Extensions.FileProviders/) |
+| Develop | [![Build develop](https://ci.appveyor.com/api/projects/status/v6w8sn7feb01iypn?svg=true)](https://ci.appveyor.com/project/dazinator/dazinator-extensions-fileproviders/branch/develop)  | [![NuGet](https://img.shields.io/nuget/vpre/Dazinator.Extensions.FileProviders.svg)](https://www.nuget.org/packages/Dazinator.Extensions.FileProviders/) |
 
-# Dazinator.AspNet.Extensions.FileProviders
+# Dazinator.Extensions.FileProviders
 
 Provides some useful `IFileProvider` implementations for `asp.net core`.
 Current FileProvider Implementations include:
 
-- RequestPathFileProvider
+- PrependBasePathFileProvider
 - InMemoryFileProvider
+- GlobPatternFilterFileProvider
 
-## RequestPathFileProvider 
+## PrependBasePathFileProvider 
 
-This file provider can wrap an existing `IFileProvider` but allows you to prepend information to the path that it's files are resolved on.
+This file provider can wrap an existing `IFileProvider` but allows you to prepend information to the path that it's content is resolved on.
 
-For example, let's say you have an `IFileProvider` which resolves a file on the subpath `/myfile.txt`, however, when you serve the file using MVC in the browser, you want it's path to be `/specialfiles/myfile.txt`. 
+For example, let's say you have an `IFileProvider` which returns a file on the subpath `/myfile.txt`, however, when you serve the file using MVC in the browser, you want it's path to be `/specialfiles/myfile.txt`. 
 
 You can do this:
 
 ```csharp
           
             var originalFileProvider = new PhysicalFileProvider(someDir);
-            var sut = new RequestPathFileProvider("/specialfiles", originalFileProvider);
+            var sut = new PrependBasePathFileProvider("/specialfiles", originalFileProvider);
 
 ```
 
-Now you can resolve exactly the same files and directories through the `RequestPathFileProvider` that the original `FileProvider` has, but you must do so using subpaths that have `/specialfiles` prepended.
+Now you can resolve exactly the same content (files and directories), but now it's via a path with `/specialfiles` prepended.
 
 ## InMemoryFileProvider 
 
@@ -80,4 +81,26 @@ var file = directory.AddFile("/some/dir", new StringFileInfo("contents","foo.txt
 
 The `InMemoryFileProvider` fully supports `watching` and change tokens. Which means if you add / update / delete a file or folder in the directory, the appropriate change tokens will be signalled.
 
+## GlobPatternFilterFileProvider
 
+Allows you to wrap an existing `IFileProvider` but specify a list of include / exclude `glob` patterns to filter the content (files and directories) that is accessible.
+
+Example:
+
+```
+
+            var dir = System.IO.Directory.GetCurrentDirectory();
+            var physicalFileProvider = new PhysicalFileProvider(dir); // underlying file provider.
+
+            var includeGlob = "/TestDir/AnotherFolder/**";
+            var sut = new GlobPatternFilterFileProvider(physicalFileProvider, new string[] { includeGlob });
+
+            // Act
+            var file = sut.GetFileInfo("/TestDir/TestFile.txt"); // this file exists in the underlying provider but is being filtered out.
+            Assert.False(file.Exists);
+
+            file = sut.GetFileInfo("/TestDir/AnotherFolder/AnotherTestFile.txt");
+            Assert.True(file.Exists);         
+```
+
+Note: you can pass in an array of both `include` and `exclude` glob expressions. Glob evaluation is done via the `DotNet.Glob` dependency.
