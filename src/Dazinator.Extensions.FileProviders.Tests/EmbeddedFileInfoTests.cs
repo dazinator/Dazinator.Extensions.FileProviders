@@ -16,7 +16,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
             using (var provider = new InMemoryFileProvider())
             {
                 var embeddedFileInfo = new EmbeddedFileInfo(GetAssemblyFromType(this.GetType()),
-                    $"Dazinator.AspNet.Extensions.FileProviders.Tests.Resources.myresource.txt",
+                    $"Dazinator.Extensions.FileProviders.Tests.Resources.myresource.txt",
                     "myfile.txt");
 
                 provider.Directory.AddFile("/some/folder", embeddedFileInfo);

@@ -10,9 +10,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		..\README.md = ..\README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dazinator.Extensions.FileProviders", "Dazinator.AspNet.Extensions.FileProviders\Dazinator.Extensions.FileProviders.csproj", "{D92D27B0-0FC2-4A89-A809-0DC76F0ABD37}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dazinator.Extensions.FileProviders", "Dazinator.Extensions.FileProviders\Dazinator.Extensions.FileProviders.csproj", "{D92D27B0-0FC2-4A89-A809-0DC76F0ABD37}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dazinator.Extensions.FileProviders.Tests", "Dazinator.AspNet.Extensions.FileProviders.Tests\Dazinator.Extensions.FileProviders.Tests.csproj", "{7CC55CA1-2EE0-4398-86C7-68B763BE8569}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dazinator.Extensions.FileProviders.Tests", "Dazinator.Extensions.FileProviders.Tests\Dazinator.Extensions.FileProviders.Tests.csproj", "{7CC55CA1-2EE0-4398-86C7-68B763BE8569}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
