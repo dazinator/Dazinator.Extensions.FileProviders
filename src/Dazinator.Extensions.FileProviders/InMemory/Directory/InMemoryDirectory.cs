@@ -96,7 +96,7 @@ namespace Dazinator.Extensions.FileProviders.InMemory.Directory
 
             var segments = PathUtils.SplitPathIntoSegments(path);
             IDirectoryItem currentDirectoryItem = _rootFolder;
-            
+
 
             // if the root folder has a name then all paths must start
             // with this name.

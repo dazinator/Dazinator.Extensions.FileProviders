@@ -1,0 +1,51 @@
+{
+  "ContentRoots": [
+    "{0}\\"
+  ],
+  "Root": {
+    "Children": {
+      "_content": {
+        "Children": {
+          "foo": {
+            "Children": {
+              "bar": {
+                "Children": {
+                  "a.txt": {
+                    "Children": null,
+                    "Asset": {
+                      "ContentRootIndex": 0,
+                      "SubPath": "txt/a.txt"
+                    },
+                    "Patterns": null
+                  },
+                  "renamed-b.txt": {
+                    "Children": null,
+                    "Asset": {
+                      "ContentRootIndex": 0,
+                      "SubPath": "txt/b.txt"
+                    },
+                    "Patterns": null
+                  }
+                },
+                "Asset": null,
+                "Patterns": null
+              },
+              "js": {
+                "Children": {
+                  "a.js": {
+                    "Children": null,
+                    "Asset": {
+                      "ContentRootIndex": 0,
+                      "SubPath": "js/a.js"
+                    },
+                    "Patterns": null
+                  }                  
+                }
+              }          
+            }
+          }        
+        }
+      }
+    }
+  }
+}

@@ -8,11 +8,11 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
         public DirectoryWatcherTests()
         {
-            
+
 
         }
-      
-             
+
+
         [Fact]
         public void Can_Watch_Directory_For_New_Items()
         {
@@ -66,7 +66,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
                 DirectoryItemUpdatedEventArgs args = e.DirectoryItemEventArgs;
                 var matchedFilters = e.MatchedFilters;
                 Assert.Equal("newfile.txt", args.OldItem.Name);
-                Assert.Equal("newfile.csv", args.NewItem.Name);               
+                Assert.Equal("newfile.csv", args.NewItem.Name);
                 notified = true;
             };
 
@@ -133,8 +133,8 @@ namespace Dazinator.Extensions.FileProviders.Tests
             directory.AddFile("/some/dir/folder/", new StringFileInfo("hi", "newfile.txt"));
             directory.AddFile("/some/dir/another/", new StringFileInfo("hi", "newfile.txt"));
             directory.AddFile("/some/dir/hello/", new StringFileInfo("hi", "newfile.txt"));
-         
-           // Watch the directory using a pattern as a filter.
+
+            // Watch the directory using a pattern as a filter.
             var watcher = new DirectoryWatcher(directory);
             var watchPattern = "/some/dir/**/new*.txt";
             watcher.AddFilter(watchPattern);
@@ -152,7 +152,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
                 Assert.Equal("newfile.txt", args.NewItem.Name);
                 Assert.StartsWith("/some/dir/", args.OldItem.Path); // the old folder path.
                 Assert.StartsWith("/newfoldername/dir/", args.NewItem.Path); // the new folder path.
-               
+
                 //Assert.Equal("/changed/dir/folder/newfile.txt", args.NewItem.Path);
                 notifyCount = notifyCount + 1;
             };
@@ -180,5 +180,5 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
     }
 
-   
+
 }

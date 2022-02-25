@@ -113,7 +113,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
             // Assert
             bool rootDirectoryFound = false;
-          
+
             foreach (var file in files)
             {
                 if (file.IsDirectory == true)
@@ -218,7 +218,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
             afterFileChangeEvent.WaitOne(timeout);
 
-            
+
 
             File.Delete(tempFilePhysicalFilePath);
             File.Delete(anotherFilePhysicalFilePath);

@@ -16,7 +16,7 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
         public bool Exists => true;
 
         public IEnumerator<IFileInfo> GetEnumerator()
-        {         
+        {
             foreach (var entry in _globAllowedFiles)
             {
                 yield return entry.Item2;

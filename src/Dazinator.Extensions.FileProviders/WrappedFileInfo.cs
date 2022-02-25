@@ -27,7 +27,7 @@ namespace Dazinator.Extensions.FileProviders
 
         public Stream CreateReadStream()
         {
-            if(_wrapStream == null)
+            if (_wrapStream == null)
             {
                 return _originalFileInfo.CreateReadStream();
             }

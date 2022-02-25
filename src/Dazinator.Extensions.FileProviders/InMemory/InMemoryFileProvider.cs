@@ -45,10 +45,10 @@ namespace Dazinator.Extensions.FileProviders.InMemory
         {
             SignalTokens(e.MatchedFilters);
         }
-       
+
         private void SignalTokens(string[] keys)
         {
-            
+
             foreach (var key in keys)
             {
                 ChangeTokenInfo changeToken = null;
@@ -110,7 +110,7 @@ namespace Dazinator.Extensions.FileProviders.InMemory
                 return NullChangeToken.Singleton;
             }
 
-           // var subPath = SubPathInfo.Parse(filter);
+            // var subPath = SubPathInfo.Parse(filter);
             // var subPathString = subPath.ToString();
             // IChangeToken existing;
 
@@ -121,7 +121,7 @@ namespace Dazinator.Extensions.FileProviders.InMemory
             }
             else
             {
-                if(filter.StartsWith("/"))
+                if (filter.StartsWith("/"))
                 {
                     filter = filter.Remove(0, 1);
                 }
@@ -170,7 +170,7 @@ namespace Dazinator.Extensions.FileProviders.InMemory
             if (_dirWatcher.IsValueCreated)
             {
                 _dirWatcher.Value.ItemAdded -= Watcher_ItemAdded;
-                _dirWatcher.Value.ItemDeleted -=Watcher_ItemDeleted;
+                _dirWatcher.Value.ItemDeleted -= Watcher_ItemDeleted;
                 _dirWatcher.Value.ItemUpdated -= Watcher_ItemUpdated;
                 _dirWatcher.Value.Dispose();
             }

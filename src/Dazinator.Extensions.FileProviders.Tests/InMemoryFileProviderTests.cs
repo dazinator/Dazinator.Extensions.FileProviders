@@ -439,7 +439,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
 
 
-       
+
 
         [Theory]
         [InlineData("", "appsettings.json")]

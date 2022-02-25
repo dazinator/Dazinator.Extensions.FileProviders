@@ -70,7 +70,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
 
             file = sut.GetFileInfo("/TestDir/AnotherFolder/AnotherTestFile.txt");
-            Assert.True(file.Exists);         
+            Assert.True(file.Exists);
 
         }
 
