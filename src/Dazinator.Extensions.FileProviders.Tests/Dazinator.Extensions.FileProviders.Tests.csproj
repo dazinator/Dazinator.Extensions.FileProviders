@@ -35,14 +35,11 @@
 		<!--<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.2" />-->
 		<!--<PackageReference Include="Microsoft.AspNetCore.Testing" Version="2.0.0" />-->
 		<PackageReference Include="Microsoft.Extensions.FileProviders.Composite" Version="2.2.0" />
+		<!--Important this package must be referenced directly from this project for GenerateEmbeddedFilesManifest to work, it wont work via a transitive reference.-->
 		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.NodeServices" Version="1.0.0-beta-000007" />
 		<PackageReference Include="Microsoft.AspNetCore.TestHost" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
-
-		<!--Important this package must be referenced directly from this project for GenerateEmbeddedFilesManifest to work, it wont work via a transitive reference.-->
-		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="$(MicrosoftExtensionsVersion)" />
-
 
 	</ItemGroup>
 

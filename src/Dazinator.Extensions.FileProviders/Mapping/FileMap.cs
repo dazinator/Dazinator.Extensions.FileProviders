@@ -7,6 +7,7 @@ using System.IO;
 using static Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets.StaticWebAssetManifest;
 using DotNet.Globbing;
 using Dazinator.Extensions.FileProviders.GlobPatternFilter;
+using System.Linq;
 
 namespace Dazinator.Extensions.FileProviders.Mapping
 {
@@ -14,11 +15,83 @@ namespace Dazinator.Extensions.FileProviders.Mapping
     public class FileMap
     {
         private Dictionary<PathString, FileMap> Children { get; set; }
-        private Dictionary<PathString, SourceFileInfo> FileMappings { get; set; } = null;
+        private Dictionary<PathString, SourceFileInfo> FileNameMappings { get; set; } = null;
         private List<PatternInfo> PatternMappings { get; set; } = null;
 
         public PathString Path { get; set; } = "/"; // root
         public FileMap Parent { get; set; } = null;
+
+        /// <summary>
+        /// Navigates the path to the specified child, creating the child for each segment of the path if it doesn't exist.
+        /// </summary>
+        /// <param name="requestPath"></param>
+        /// <param name="configure"></param>
+        /// <returns></returns>
+        public FileMap NavigateTo(PathString requestPath, bool createIfNotExists = true)
+        {
+            // navigate to the parent node for this file path.
+            var mapNode = this;
+            var requestPathSegments = requestPath.Value.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var item in requestPathSegments)
+            {
+                if (createIfNotExists)
+                {
+                    mapNode = mapNode.GetOrAddChild($"/{item}");
+                }
+                else
+                {
+                    mapNode = mapNode.GetChild($"/{item}");
+                }
+            }
+
+            return mapNode;
+        }
+
+        /// <summary>
+        /// Creates a map at the specified path and calles a delegate for you to configure the mappings at that path.
+        /// </summary>
+        /// <param name="requestPath"></param>
+        /// <param name="configure"></param>
+        /// <returns></returns>
+        public FileMap WithRequestPath(PathString requestPath, Action<FileMap> configureMappings)
+        {
+            // navigate to the parent node for this file path.
+            var map = NavigateTo(requestPath, createIfNotExists: true);
+            configureMappings(map);
+            return this;
+        }
+
+
+        /// <summary>
+        /// Tries to navigate each segment of the <see cref="PathString"/> finding the existing child map for that segment. The out parameters include the map for the last segment that was matched, plus any remaining path segments that there was no map for.
+        /// </summary>
+        /// <param name="requestPath"></param>
+        /// <param name="map"></param>
+        /// <param name="remaining"></param>
+        /// <returns></returns>
+        public bool TryNavigateTo(PathString requestPath, out FileMap map, out PathString remaining)
+        {
+            // navigate to the node for this file path.
+            var segments = requestPath.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            int depth = 0;
+            remaining = null;
+            //PathString matchedPath = "/";
+            map = this;
+            for (var i = 0; i < segments.Length; i++)
+            {
+                if (map.TryGetChild($"/{segments[i]}", out var child))
+                {
+                    map = child;
+                    depth = depth + 1;
+                    continue;
+                }
+
+                remaining = new PathString($"/{string.Join("/", segments[depth..])}");
+                return false;
+            }
+
+            return true;
+        }
 
         public bool TryGetChild(PathString path, out FileMap child)
         {
@@ -40,6 +113,18 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             return Children[path];
 
         }
+        public FileMap GetOrAddChild(PathString path)
+        {
+            if (Children == null)
+            {
+                Children = new Dictionary<PathString, FileMap>();
+            }
+            if (Children.TryGetValue(path, out var child))
+            {
+                return child;
+            }
+            return AddChild(path);
+        }
         public FileMap AddChild(PathString pathString)
         {
             if (Children == null)
@@ -53,14 +138,14 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             child.Parent = this;
             return child;
         }
-        public FileMap AddFileMapping(PathString path, IFileProvider sourceFileProvider, string sourcePath)
+        public FileMap AddFileNameMapping(PathString fileName, IFileProvider sourceFileProvider, string sourcePath)
         {
-            if (FileMappings == null)
+            if (FileNameMappings == null)
             {
-                FileMappings = new Dictionary<PathString, SourceFileInfo>();
+                FileNameMappings = new Dictionary<PathString, SourceFileInfo>();
             }
 
-            FileMappings.Add(path, new SourceFileInfo() { SourceFileProvider = sourceFileProvider, SourcePath = sourcePath });
+            FileNameMappings.Add(fileName, new SourceFileInfo() { SourceFileProvider = sourceFileProvider, SourcePath = sourcePath });
             return this;
         }
         /// <summary>
@@ -81,24 +166,14 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             PatternMappings.Add(new PatternInfo(Glob.Parse(pattern), sourceFileProvider));
             return this;
         }
-        public bool TryGetFileMapping(PathString path, out SourceFileInfo sourceFile)
+        private bool TryGetFileFromFileMappings(PathString fileName, out IFileInfo sourceFile)
         {
             sourceFile = null;
-            if (FileMappings == null)
+            if (FileNameMappings == null)
             {
                 return false;
             }
-            return FileMappings.TryGetValue(path, out sourceFile);
-
-        }
-        public bool TryGetFileFromFileMappings(PathString path, out IFileInfo sourceFile)
-        {
-            sourceFile = null;
-            if (FileMappings == null)
-            {
-                return false;
-            }
-            if (FileMappings.TryGetValue(path, out var sourceFileMapping))
+            if (FileNameMappings.TryGetValue(fileName, out var sourceFileMapping))
             {
                 sourceFile = sourceFileMapping.GetFileInfo();
                 return true;
@@ -107,7 +182,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             return false;
         }
 
-        public bool TryGetFileFromPatternMappings(PathString path, out IFileInfo sourceFile)
+        private bool TryGetFileFromPatternMappings(PathString path, out IFileInfo sourceFile)
         {
             sourceFile = null;
             if (PatternMappings == null)
@@ -128,7 +203,6 @@ namespace Dazinator.Extensions.FileProviders.Mapping
 
         public bool TryGetMappedFile(PathString path, out IFileInfo sourceFile)
         {
-            sourceFile = null;
             if (TryGetFileFromFileMappings(path, out sourceFile))
             {
                 return true;
@@ -161,7 +235,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 _glob = glob;
                 _fileProvider = fileProvider;
             }
-            public bool TryGetMatchedFileInfo(string filePath, out IFileInfo matchedFile)
+            public bool TryGetMatchedFileInfo(PathString filePath, out IFileInfo matchedFile)
             {
                 if (_glob.IsMatch(filePath))
                 {
@@ -225,7 +299,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                     // we wan't a single one for the parent path, which has patterns, and files added to it as seperate concepts individually.
                     var asset = node.Match;
                     var fp = fps[asset.ContentRoot];
-                    requestPathNode.AddFileMapping($"/{key}", fp, asset.Path);
+                    requestPathNode.AddFileNameMapping($"/{key}", fp, asset.Path);
                 }
 
                 if (node.Children == null)
@@ -249,7 +323,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                     if (asset != null)
                     {
                         var fp = fps[asset.ContentRoot];
-                        requestPathNode.AddFileMapping($"/{child.Key}", fp, asset.Path);
+                        requestPathNode.AddFileNameMapping($"/{child.Key}", fp, asset.Path);
                     }
                     else
                     {

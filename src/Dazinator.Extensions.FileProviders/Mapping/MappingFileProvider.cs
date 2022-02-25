@@ -21,28 +21,43 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             _map = map;
         }
 
-        private static char[] _splitChars = new char[] { '/' };
-
         public IFileInfo GetFileInfo(string subpath)
         {
-            // traverse each segment of the subath to get far as we can
-            var candidate = _map;
-
-            var segments = subpath.Split(_splitChars, StringSplitOptions.RemoveEmptyEntries);
-            int depth = 0;
-
-            //PathString matchedPath = "/";
-
-            for (var i = 0; i < segments.Length; i++)
+            if (subpath == null)
             {
-                if (candidate.TryGetChild($"/{segments[i]}", out var child))
-                {
-                    candidate = child;
-                    depth = depth + 1;
-                    continue;
-                }
-                break;
+                throw new ArgumentNullException(nameof(subpath));
             }
+
+            // traverse each segment of the subath to get far as we can
+            //  var candidate = _map;
+
+            PathString pathString;
+            if (subpath.StartsWith('/'))
+            {
+                pathString = subpath;
+            }
+            else
+            {
+                pathString = $"/{subpath}";
+            }
+
+            _map.TryNavigateTo(pathString, out var candidate, out var remaining);
+
+            //var segments = subpath.Split(_splitChars, StringSplitOptions.RemoveEmptyEntries);
+            //int depth = 0;
+
+            ////PathString matchedPath = "/";
+
+            //for (var i = 0; i < segments.Length; i++)
+            //{
+            //    if (candidate.TryGetChild($"/{segments[i]}", out var child))
+            //    {
+            //        candidate = child;
+            //        depth = depth + 1;
+            //        continue;
+            //    }
+            //    break;
+            //}
 
             // check for explicit file mapping first
 
@@ -52,12 +67,12 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             // other wise fall back to pattern checks,
             // check nearest patterns, then walk backwards towards root.
             // PathString fileNamePathString = $"/{fileName}";
-            var remainingPath = new PathString($"/{string.Join("/", segments[depth..])}");
+            //   var remainingPath = new PathString($"/{string.Join("/", segments[depth..])}");
 
             while (next != null)
             {
 
-                if (next.TryGetMappedFile(remainingPath, out var sourceFileInfo))
+                if (next.TryGetMappedFile(remaining, out var sourceFileInfo))
                 {
                     return sourceFileInfo;
                 }
@@ -79,7 +94,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 //}
                 if (next.Parent != null)
                 {
-                    remainingPath = next.Path.Add(remainingPath);
+                    remaining = next.Path.Add(remaining);
                 }
 
                 next = next.Parent;
