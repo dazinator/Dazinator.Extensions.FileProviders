@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
-using static Dazinator.Extensions.FileProviders.Mapping.FileMap;
 
 namespace Dazinator.Extensions.FileProviders.Mapping
 {
@@ -28,9 +27,6 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 throw new ArgumentNullException(nameof(subpath));
             }
 
-            // traverse each segment of the subath to get far as we can
-            //  var candidate = _map;
-
             PathString pathString;
             if (subpath.StartsWith('/'))
             {
@@ -43,61 +39,20 @@ namespace Dazinator.Extensions.FileProviders.Mapping
 
             _map.TryNavigateTo(pathString, out var candidate, out var remaining);
 
-            //var segments = subpath.Split(_splitChars, StringSplitOptions.RemoveEmptyEntries);
-            //int depth = 0;
-
-            ////PathString matchedPath = "/";
-
-            //for (var i = 0; i < segments.Length; i++)
-            //{
-            //    if (candidate.TryGetChild($"/{segments[i]}", out var child))
-            //    {
-            //        candidate = child;
-            //        depth = depth + 1;
-            //        continue;
-            //    }
-            //    break;
-            //}
-
-            // check for explicit file mapping first
-
-            //    segments.Length == 0 ? segments[0] : segments[segments.Length - 1];
-            var next = candidate;
-
-            // other wise fall back to pattern checks,
-            // check nearest patterns, then walk backwards towards root.
-            // PathString fileNamePathString = $"/{fileName}";
-            //   var remainingPath = new PathString($"/{string.Join("/", segments[depth..])}");
-
-            while (next != null)
+            while (candidate != null)
             {
 
-                if (next.TryGetMappedFile(remaining, out var sourceFileInfo))
+                if (candidate.TryGetMappedFile(remaining, out var sourceFileInfo))
                 {
                     return sourceFileInfo;
                 }
 
-                // todo: not certain about this, leaving for now to see if any issue can be proven.
-                //// scenario:
-                //// the file: /foo/bar/bat.txt could be represented as
-                //// nodes: - foo
-                ////           - bar
-                //// with a file mapping on bar for source file "bat.txt" provided by file provider A.
-                //// but it also could be represented as
-                //// nodes: - foo
-                //// with a file mapping on foo for source file "/bar/bat.txt" provided by file provider B.
-                //// we've already covered the first case, however in this loop we are covering the second case
-                //// as it presents itself as we walk back through the hierarchy
-                //if (candidate.TryGetFileMapping($"/{fileName}", out sourceFile))
-                //{
-                //    return sourceFile.GetFileInfo();
-                //}
-                if (next.Parent != null)
+                if (candidate.Parent != null)
                 {
-                    remaining = next.Path.Add(remaining);
+                    remaining = candidate.Path.Add(remaining);
                 }
 
-                next = next.Parent;
+                candidate = candidate.Parent;
 
             }
 
@@ -106,6 +61,43 @@ namespace Dazinator.Extensions.FileProviders.Mapping
         }
         public IDirectoryContents GetDirectoryContents(string subpath)
         {
+            if (subpath == null)
+            {
+                throw new ArgumentNullException(nameof(subpath));
+            }
+
+            PathString pathString;
+            if (subpath.StartsWith('/'))
+            {
+                pathString = subpath;
+            }
+            else
+            {
+                pathString = $"/{subpath}";
+            }
+
+            if (_map.TryNavigateTo(pathString, out var candidate, out var remaining))
+            {
+                // we have mappings for this path, they take precedence over any patterns higher up
+
+
+                // get any files from explicit file mappings on the current path,
+                // plus any items matched
+                var mappedDirectoryContents = candidate.GetMappedDirectoryContents();
+                return mappedDirectoryContents;
+
+            }
+
+            while (candidate != null)
+            {
+                if (candidate.Parent != null)
+                {
+                    remaining = candidate.Path.Add(remaining);
+                }
+
+                candidate = candidate.Parent;
+            }
+
             throw new NotImplementedException();
         }
         public IChangeToken Watch(string filter)

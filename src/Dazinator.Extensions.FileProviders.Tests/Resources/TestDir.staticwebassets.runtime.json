@@ -39,13 +39,20 @@
                       "SubPath": "js/a.js"
                     },
                     "Patterns": null
-                  }                  
+                  }
                 }
-              }          
+              }
             }
-          }        
+          }
         }
       }
-    }
+    },
+    "Patterns": [
+      {
+        "ContentRootIndex": 0,
+        "Pattern": "**",
+        "Depth": 0
+      }
+    ]
   }
 }

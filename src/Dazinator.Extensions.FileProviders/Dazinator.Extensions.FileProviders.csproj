@@ -6,7 +6,7 @@
     <VersionPrefix>0.0.0</VersionPrefix>
 	<LangVersion>8.0</LangVersion>
     <Authors>Darrell Tunnell</Authors>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net5.0</TargetFrameworks>
     <AssemblyName>Dazinator.Extensions.FileProviders</AssemblyName>
     <PackageId>Dazinator.Extensions.FileProviders</PackageId>
     <PackageReleaseNotes>More file info implementations for use with the InMemoryFileProvider, including EmbeddedFileInfo. Search for files from any IFileProvider using a fast glob search with include and exclude patterns.</PackageReleaseNotes>

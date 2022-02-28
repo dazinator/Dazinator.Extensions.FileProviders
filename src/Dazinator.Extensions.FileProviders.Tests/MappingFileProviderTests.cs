@@ -8,6 +8,7 @@ using Dazinator.Extensions.FileProviders.Mapping;
 using Dazinator.Extensions.FileProviders.InMemory;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
+using Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets;
 
 namespace Dazinator.Extensions.FileProviders.Tests
 {
@@ -69,18 +70,24 @@ namespace Dazinator.Extensions.FileProviders.Tests
             var fileName = new PathString($"/{filePathSegments[^1]}");
 
             var fileDir = $"/{string.Join('/', filePathSegments[..^1])}";
-            fileMap.WithRequestPath(fileDir, (mappings) =>
+            fileMap.MapPath(fileDir, (mappings) =>
             {
                 mappings.AddFileNameMapping(fileName, inMemoryFileProvider, sourcePath);
             });
 
             var sut = new MappingFileProvider(fileMap);
             var file = sut.GetFileInfo(requestFilePath);
+
             Assert.True(file.Exists);
+            Assert.Equal(fileName.Value.TrimStart('/'), file.Name);
         }
 
         [Theory]
         [InlineData("/foo", 1, "foo/root.txt:bar/a.txt")]
+        [InlineData("/foo", 1, "foo/root.txt:foo/bar.txt")]
+        [InlineData("/foo", 1, "foo/root.txt:bar.txt")]
+        [InlineData("/", 1, "foo/a.txt:foo/a.txt", "foo/b.txt:foo/b.txt")] // single subfolder
+        [InlineData("/", 2, "foo/a.txt:foo/a.txt", "bar/b.txt:bar/b.txt")] // multiple subfolders
         public async Task Can_Get_DirectoryContents_Containing_ExplicitFiles(string folderPath, int expectedResults, params string[] files)
         {
             var inMemoryFileProvider = new InMemoryFileProvider();
@@ -97,10 +104,33 @@ namespace Dazinator.Extensions.FileProviders.Tests
             foreach (var mapping in mappings)
             {
                 AddInMemoryFile(inMemoryFileProvider, mapping.Item2);
-                fileMap.WithRequestPath(folderPath, (folderPathMappings) =>
+                var mappingRequestPath = $"/{mapping.Item1}";
+                var mappingRequestPathSegments = mapping.Item1.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+                var mappingRequestPathFileName = mappingRequestPathSegments[^1];
+                // assumption for test data purposes, if last segment of request path ends in "." we expect this
+                // to be a file.
+                // otherwise we expect it to represent a directory.
+                bool isFilePath = mappingRequestPathFileName.Contains(".");
+                string mappingRequestPathDir;
+                if (isFilePath)
                 {
-                    var fileName = mapping.Item1.Split('/', StringSplitOptions.RemoveEmptyEntries).Last();
-                    folderPathMappings.AddFileNameMapping($"/{fileName}", inMemoryFileProvider, mapping.Item2);
+                    // take all segments EXCEPT the file name to mean the directory portion of the path.
+                    mappingRequestPathDir = $"/{string.Join('/', mappingRequestPathSegments[..^1])}";
+                }
+                else
+                {
+                    // The entire path is a directory.
+                    mappingRequestPathDir = mappingRequestPath;
+                }
+
+
+                fileMap.MapPath(mappingRequestPathDir, (folderPathMappings) =>
+                {
+                    if (isFilePath)
+                    {
+                        folderPathMappings.AddFileNameMapping($"/{mappingRequestPathFileName}", inMemoryFileProvider, mapping.Item2);
+                    }
                 });
             }
 
@@ -124,51 +154,22 @@ namespace Dazinator.Extensions.FileProviders.Tests
             AddInMemoryFile(inMemoryFileProvider, sourceFilePath);
 
             FileMap fileMap = new FileMap();
+            // the pattern in the test data deliberatley takes the form [base-path]/[pattern]
+            // where [base-path] and [pattern] are split here
+            // to work out at which path to add the pattern mapping.
+            var pathSegments = pattern.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            var fileDir = $"/{string.Join('/', pathSegments[..^1])}";
 
-
-            AddPatternMapping(pattern, inMemoryFileProvider, fileMap);
-            //fileMap.WithRequestPath(fileDir, (folderPathMappings) =>
-            //{
-            //    folderPathMappings.AddPatternMapping(pattern, inMemoryFileProvider);
-            //});
-
-            //BuldFileMapWithPath(requestFilePath, out _, out _);
-            //AddPatternMapping(pattern, inMemoryFileProvider, fileMap);
+            fileMap.MapPath(fileDir, (folderPathMappings) =>
+            {
+                var fileNamePattern = new PathString($"/{pathSegments[^1]}");
+                folderPathMappings.AddPatternMapping(fileNamePattern, inMemoryFileProvider);
+            });
 
             var sut = new MappingFileProvider(fileMap);
             var file = sut.GetFileInfo(requestFilePath);
             Assert.True(file.Exists);
         }
-
-        private static void AddPatternMapping(string pattern, InMemoryFileProvider inMemoryFileProvider, FileMap mapNode)
-        {
-
-            var filePathSegments = pattern.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            var fileName = new PathString($"/{filePathSegments[^1]}");
-            var fileDir = $"/{string.Join('/', filePathSegments[..^1])}";
-
-            mapNode.WithRequestPath(fileDir, (folderPathMappings) =>
-            {
-                folderPathMappings.AddPatternMapping(fileName, inMemoryFileProvider);
-            });
-            //var patternSegments = pattern.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-            //var patternDirectoryDirectorySegments = patternSegments.Length <= 1 ? Enumerable.Empty<string>() : patternSegments.Take(patternSegments.Length - 1);
-            // mapNode.wih
-            //  return mapNode;
-        }
-
-        //private static FileMap GetPathMapping(FileMap map, string requestFileName, out string fileName)
-        //{
-        //    var mapNode = map;
-        //    var requestPathSegments = requestFileName.Split(new char[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-        //    var requestPathDirectorySegments = requestPathSegments.Length <= 1 ? Enumerable.Empty<string>() : requestPathSegments.Take(requestPathSegments.Length - 1);
-        //    foreach (var item in requestPathDirectorySegments)
-        //    {
-        //        mapNode = mapNode.AddChild($"/{item}");
-        //    }
-        //    fileName = requestPathSegments.LastOrDefault();
-        //    return mapNode;
-        //}
 
         private static InMemoryFileProvider AddInMemoryFile(InMemoryFileProvider inMemoryFileProvider, string sourceFilePath)
         {

@@ -2,18 +2,19 @@
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Http;
 using System;
-using Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets;
 using System.IO;
-using static Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets.StaticWebAssetManifest;
 using DotNet.Globbing;
 using Dazinator.Extensions.FileProviders.GlobPatternFilter;
 using System.Linq;
+using System.Runtime;
+using Dazinator.Extensions.FileProviders.Utils;
 
 namespace Dazinator.Extensions.FileProviders.Mapping
 {
 
     public class FileMap
     {
+
         private Dictionary<PathString, FileMap> Children { get; set; }
         private Dictionary<PathString, SourceFileInfo> FileNameMappings { get; set; } = null;
         private List<PatternInfo> PatternMappings { get; set; } = null;
@@ -53,7 +54,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
         /// <param name="requestPath"></param>
         /// <param name="configure"></param>
         /// <returns></returns>
-        public FileMap WithRequestPath(PathString requestPath, Action<FileMap> configureMappings)
+        public FileMap MapPath(PathString requestPath, Action<FileMap> configureMappings)
         {
             // navigate to the parent node for this file path.
             var map = NavigateTo(requestPath, createIfNotExists: true);
@@ -145,7 +146,12 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 FileNameMappings = new Dictionary<PathString, SourceFileInfo>();
             }
 
-            FileNameMappings.Add(fileName, new SourceFileInfo() { SourceFileProvider = sourceFileProvider, SourcePath = sourcePath });
+            FileNameMappings.Add(fileName, new SourceFileInfo()
+            {
+                SourceFileProvider = sourceFileProvider,
+                SourcePath = sourcePath
+            });
+
             return this;
         }
         /// <summary>
@@ -175,11 +181,26 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             }
             if (FileNameMappings.TryGetValue(fileName, out var sourceFileMapping))
             {
-                sourceFile = sourceFileMapping.GetFileInfo();
+                sourceFile = GetMappedFileFromSourceFile(fileName, sourceFileMapping);
                 return true;
             }
 
             return false;
+        }
+
+        private static IFileInfo GetMappedFileFromSourceFile(PathString fileName, SourceFileInfo sourceFileMapping)
+        {
+            IFileInfo sourceFile = sourceFileMapping.GetSourceFileInfo();
+
+            // We need to override the name of the underlying source file to match the name specified in the mapping.
+            // - but only if they are different.
+            var requestFileName = fileName.Value.Substring(1);
+            if (!string.Equals(sourceFile.Name, requestFileName, FileSystemStringComparison.SingletonInstance))
+            {
+                sourceFile = new WrappedFileInfo(sourceFile) { Name = requestFileName };
+            }
+
+            return sourceFile;
         }
 
         private bool TryGetFileFromPatternMappings(PathString path, out IFileInfo sourceFile)
@@ -211,18 +232,51 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             return TryGetFileFromPatternMappings(path, out sourceFile);
         }
 
+        public IDirectoryContents GetMappedDirectoryContents()
+        {
+            var contents = new List<IFileInfo>();
+
+            if (FileNameMappings != null)
+            {
+                foreach (var fileMapping in FileNameMappings)
+                {
+                    var mappedFileInfo = GetMappedFileFromSourceFile(fileMapping.Key, fileMapping.Value);
+                    contents.Add(mappedFileInfo);
+                }
+            }
+
+            // now map in explicitly named children - these represent folders.
+            if (Children != null)
+            {
+                foreach (var child in Children)
+                {
+
+                    contents.Add(new DirectoryFileInfo(child.Key.Value.Substring(1)));
+                    //var child = GetMappedFileFromSourceFile(fileMapping.Key, fileMapping.Value);
+                    //  contents.Add(child);
+                }
+
+            }
+
+            if (PatternMappings != null)
+            {
+                throw new NotImplementedException();
+            }
+            return new EnumerableDirectoryContents(contents.ToArray());
+        }
+
+
         public class SourceFileInfo
         {
             public string SourcePath { get; set; }
             // public string TargetPath { get; set; }
             public IFileProvider SourceFileProvider { get; set; }
 
-            public IFileInfo GetFileInfo()
+            public IFileInfo GetSourceFileInfo()
             {
                 return SourceFileProvider.GetFileInfo(SourcePath);
+
             }
-
-
         }
 
         public class PatternInfo
@@ -247,102 +301,13 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             }
 
         }
-    }
 
-
-    public static class FileMapExtensions
-    {
-        public static FileMap AddFromStaticWebAssetsManifest(this FileMap map, StaticWebAssetManifest manifest, Func<string, IFileProvider> contentRootFileProviderFactory)
-        {
-            PopulateFromManifest(map, manifest, contentRootFileProviderFactory);
-            return map;
-        }
-
-        private static void PopulateFromManifest(FileMap map,
-            StaticWebAssetManifest manifest,
-            Func<string, IFileProvider> contentRootFileProviderFactory)
-        {
-            IFileProvider[] fps = new IFileProvider[manifest.ContentRoots.Length];
-            for (int i = 0; i < fps.Length; i++)
-            {
-                fps[i] = contentRootFileProviderFactory(manifest.ContentRoots[i]);
-                // patterns[i] = new Tuple<List<string>, List<string>>(new List<string>(), new List<string>());
-            }
-
-            Stack<Tuple<string, StaticWebAssetNode, FileMap>> stack = new Stack<Tuple<string, StaticWebAssetNode, FileMap>>();
-            stack.Push(new Tuple<string, StaticWebAssetNode, FileMap>(string.Empty, manifest.Root, map));
-
-            while (stack.TryPop(out var tuple))
-            {
-                var key = tuple.Item1;
-                var node = tuple.Item2;
-                var requestPathNode = tuple.Item3;
-
-                if (node.Patterns != null)
-                {
-                    foreach (var pattern in node.Patterns)
-                    {
-                        var fp = fps[pattern.ContentRoot];
-                        requestPathNode.AddPatternMapping(pattern.Pattern, fp);
-                    };
-                }
-
-                // This should always be null, but could technically be set for root node.
-                if (node.Match != null)
-                {
-                    if (requestPathNode.Parent != null) // are we processing root node
-                    {
-                        throw new InvalidOperationException("file mappings should be added to parent node");
-                    }
-                    // if it has an asset, we see this as an individual file mapping that should be added under
-                    // the previuos request path node. i.e we don't want new request path nodes added per mapped file.
-                    // we wan't a single one for the parent path, which has patterns, and files added to it as seperate concepts individually.
-                    var asset = node.Match;
-                    var fp = fps[asset.ContentRoot];
-                    requestPathNode.AddFileNameMapping($"/{key}", fp, asset.Path);
-                }
-
-                if (node.Children == null)
-                {
-                    continue;
-                }
-
-                // stack children t
-                foreach (var child in node.Children)
-                {
-                    // We are only interested in creating additional `RequestPathNode`s to represent each "parent"
-                    // segment of the request path,
-                    // so, foo/bar/bat.txt and foo/bar/baz.txt--> 
-                    //   -foo
-                    //     -bar
-                    // then the "bat.txt" and "baz.txt" will be added as "file mappings" to the "bar" parent RequestPathNode.
-                    // we detect if the child represents a "file mapping" by checking the "Match" property which
-                    // points to a mapped file when that is the case.            
-
-                    var asset = child.Value?.Match;
-                    if (asset != null)
-                    {
-                        var fp = fps[asset.ContentRoot];
-                        requestPathNode.AddFileNameMapping($"/{child.Key}", fp, asset.Path);
-                    }
-                    else
-                    {
-                        // must be processed as a potential parent.                       
-                        var nextParentNode = requestPathNode.AddChild($"/{child.Key}");
-                        stack.Push(new Tuple<string, StaticWebAssetNode, FileMap>(child.Key, child.Value, nextParentNode));
-                    }
-
-                }
-            }
-        }
-
-
-        //private StaticWebAssetManifest LoadStaticWebAssetManifest(Stream manifestFileStream)
+        //private sealed class FileNameComparer : IEqualityComparer<IFileInfo>
         //{
-        //    var manifest = StaticWebAssetManifest.Parse(manifestFileStream);
-        //    return manifest;
-        //}
+        //    public bool Equals(IFileInfo? x, IFileInfo? y) => string.Equals(x?.Name, y?.Name, _fsComparison);
 
+        //    public int GetHashCode(IFileInfo obj) => obj.Name.GetHashCode(_fsComparison);
+        //}
     }
 
 

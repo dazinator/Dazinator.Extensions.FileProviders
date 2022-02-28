@@ -37,7 +37,8 @@ namespace Dazinator.Extensions.FileProviders.PrependBasePath
                 }
 
                 PathString remaining;
-                if (originalPathString.HasValue && originalPathString.StartsWithSegments(_basePath, out remaining))
+                if (originalPathString.HasValue &&
+                    originalPathString.StartsWithSegments(_basePath, out remaining))
                 {
                     // var childPath = originalPathString.Remove(0, _basePath.Value.Length);
                     newSubPath = remaining;
