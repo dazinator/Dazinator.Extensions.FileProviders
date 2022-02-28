@@ -9,6 +9,7 @@ using Dazinator.Extensions.FileProviders.InMemory;
 using System.Linq;
 using Microsoft.AspNetCore.Http;
 using Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets;
+using System.IO;
 
 namespace Dazinator.Extensions.FileProviders.Tests
 {
@@ -83,17 +84,25 @@ namespace Dazinator.Extensions.FileProviders.Tests
         }
 
         [Theory]
-        [InlineData("/foo", 1, "foo/root.txt:bar/a.txt")]
-        [InlineData("/foo", 1, "foo/root.txt:foo/bar.txt")]
-        [InlineData("/foo", 1, "foo/root.txt:bar.txt")]
-        [InlineData("/", 1, "foo/a.txt:foo/a.txt", "foo/b.txt:foo/b.txt")] // single subfolder
-        [InlineData("/", 2, "foo/a.txt:foo/a.txt", "bar/b.txt:bar/b.txt")] // multiple subfolders
-        public async Task Can_Get_DirectoryContents_Containing_ExplicitFiles(string folderPath, int expectedResults, params string[] files)
+        [InlineData("/foo", 1, new string[] { "foo/root.txt:bar/a.txt" })]
+        [InlineData("/foo", 1, new string[] { "foo/root.txt:foo/bar.txt" })]
+        [InlineData("/foo", 1, new string[] { "foo/root.txt:bar.txt" })]
+        [InlineData("/", 1, new string[] {
+            "foo/a.txt:foo/a.txt",
+            "foo/b.txt:foo/b.txt"
+        })] // get root, single subfolder expected
+        [InlineData("/", 2, new string[] {
+            "foo/a.txt:foo/a.txt",
+            "bar/b.txt:bar/b.txt"
+        })] // get root, 2 subfolders expected
+        [InlineData("/", 1, new string[0],
+            new string[] { "/**:/foo" })] // get root, 1 subfolder via pattern match expected
+        public async Task Can_Get_DirectoryContents_Containing_ExplicitFiles(string folderPath, int expectedResults, string[] fileMappings, string[] patternMappings = null)
         {
             var inMemoryFileProvider = new InMemoryFileProvider();
             var mappings = new List<Tuple<string, string>>();
 
-            foreach (var item in files)
+            foreach (var item in fileMappings)
             {
                 var mapping = item.Split(':', StringSplitOptions.RemoveEmptyEntries);
                 mappings.Add(new Tuple<string, string>(mapping[0], mapping[1]));
@@ -104,34 +113,68 @@ namespace Dazinator.Extensions.FileProviders.Tests
             foreach (var mapping in mappings)
             {
                 AddInMemoryFile(inMemoryFileProvider, mapping.Item2);
-                var mappingRequestPath = $"/{mapping.Item1}";
-                var mappingRequestPathSegments = mapping.Item1.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
-                var mappingRequestPathFileName = mappingRequestPathSegments[^1];
-                // assumption for test data purposes, if last segment of request path ends in "." we expect this
-                // to be a file.
-                // otherwise we expect it to represent a directory.
-                bool isFilePath = mappingRequestPathFileName.Contains(".");
-                string mappingRequestPathDir;
-                if (isFilePath)
-                {
-                    // take all segments EXCEPT the file name to mean the directory portion of the path.
-                    mappingRequestPathDir = $"/{string.Join('/', mappingRequestPathSegments[..^1])}";
-                }
-                else
-                {
-                    // The entire path is a directory.
-                    mappingRequestPathDir = mappingRequestPath;
-                }
+                var mappingRequestPath = new PathString($"/{mapping.Item1}");
+                mappingRequestPath.SplitToDirectoryPathAndFileName(PathStringExtensions.PathSeperationStrategy.FileNameMustBeLastSegmentAndContainDotExtension, out var directory, out var filename);
 
-
-                fileMap.MapPath(mappingRequestPathDir, (folderPathMappings) =>
+                fileMap.MapPath(directory, (folderPathMappings) =>
                 {
-                    if (isFilePath)
+                    if (!string.IsNullOrEmpty(filename))
                     {
-                        folderPathMappings.AddFileNameMapping($"/{mappingRequestPathFileName}", inMemoryFileProvider, mapping.Item2);
+                        folderPathMappings.AddFileNameMapping($"/{filename}", inMemoryFileProvider, mapping.Item2);
                     }
                 });
+            }
+
+            // setup pattern mappings
+            var patternMappingsList = new List<Tuple<string, string>>();
+            if (patternMappings != null)
+            {
+                foreach (var item in patternMappings)
+                {
+                    var mapping = item.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                    patternMappingsList.Add(new Tuple<string, string>(mapping[0], mapping[1]));
+                }
+            }
+
+            // add an pattern mapping for each pattern mapping in the list,
+            // create any file or directories to support the mapping for the purposes of the test
+            // as specified.
+            foreach (var mapping in patternMappingsList)
+            {
+                // set up the test files in the underlying provider, used in this test of the mapping.
+                var files = mapping.Item2.Split(",");
+                foreach (var file in files)
+                {
+                    var mappingRequestPath = new PathString($"/{file}");
+                    mappingRequestPath.SplitToDirectoryPathAndFileName(PathStringExtensions.PathSeperationStrategy.FileNameMustBeLastSegmentAndContainDotExtension, out var fileDirectory, out var filename);
+
+                    if (!string.IsNullOrEmpty(filename))
+                    {
+                        AddInMemoryFile(inMemoryFileProvider, file);
+                    }
+                    else
+                    {
+                        inMemoryFileProvider.Directory.GetOrAddFolder(fileDirectory);
+                    }
+                }
+
+                // add the mapping
+                var patternSegment = mapping.Item1;
+                // an assumption is made here about the format of the pattern provided in the test.
+                // we will assume that the last segment is always the pattern and any segments before are directory
+                // path that the pattern needs to mapped on to.
+                var patternPathString = new PathString($"/{patternSegment}");
+                patternPathString.SplitToDirectoryPathAndFileName(PathStringExtensions.PathSeperationStrategy.FileNameIsAlwaysLastSegment, out var directory, out var pattern);
+
+                fileMap.MapPath(directory, (folderPathMappings) =>
+                {
+                    if (!string.IsNullOrEmpty(pattern))
+                    {
+                        folderPathMappings.AddPatternMapping(pattern.Value.Substring(1), inMemoryFileProvider);
+                    }
+                });
+
             }
 
             var sut = new MappingFileProvider(fileMap);
@@ -139,6 +182,9 @@ namespace Dazinator.Extensions.FileProviders.Tests
             Assert.NotNull(folderContents);
             Assert.Equal(expectedResults, folderContents.Count());
         }
+
+
+
 
 
         [Theory]
@@ -181,6 +227,8 @@ namespace Dazinator.Extensions.FileProviders.Tests
             inMemoryFileProvider.Directory.AddFile(sourceDirectory, new StringFileInfo("test", sourceFileName));
             return inMemoryFileProvider;
         }
+
+
     }
 
 }
