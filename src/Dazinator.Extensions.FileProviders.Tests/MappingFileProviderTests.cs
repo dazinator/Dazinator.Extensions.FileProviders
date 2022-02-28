@@ -184,17 +184,18 @@ namespace Dazinator.Extensions.FileProviders.Tests
         }
 
 
-
-
-
         [Theory]
-        [InlineData("root.txt", "root.txt", "**")]
-        [InlineData("_content/foo/bar/a.txt", "a.txt", "_content/foo/bar/**")]
-        [InlineData("_content/foo/txt/b.txt", "txt/b.txt", "_content/foo/**")]
+        [InlineData("root.txt", "root.txt", "**", null)]
+        [InlineData("_content/foo/bar/a.txt", "a.txt", "_content/foo/bar/**", null)]
+        [InlineData("_content/foo/txt/b.txt", "txt/b.txt", "_content/foo/**", null)]
+        [InlineData("foo/bar/txt/b.txt", "foo/bar/txt/b.txt", "foo/bar/**", 0)]
+        [InlineData("foo/bar/txt/b.txt", "bar/txt/b.txt", "foo/bar/**", 1)]
+        [InlineData("foo/bar/txt/b.txt", "txt/b.txt", "foo/bar/**", 2)]
         public async Task Can_Get_File_From_Pattern_Mapping(
             string requestFilePath,
             string sourceFilePath,
-            string pattern)
+            string pattern,
+            int? patternSourceProviderPathDepth)
         {
             InMemoryFileProvider inMemoryFileProvider = new InMemoryFileProvider();
             AddInMemoryFile(inMemoryFileProvider, sourceFilePath);
@@ -209,7 +210,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
             fileMap.MapPath(fileDir, (folderPathMappings) =>
             {
                 var fileNamePattern = new PathString($"/{pathSegments[^1]}");
-                folderPathMappings.AddPatternMapping(fileNamePattern, inMemoryFileProvider);
+                folderPathMappings.AddPatternMapping(fileNamePattern, inMemoryFileProvider, patternSourceProviderPathDepth);
             });
 
             var sut = new MappingFileProvider(fileMap);

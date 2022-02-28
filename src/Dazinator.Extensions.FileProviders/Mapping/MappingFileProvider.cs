@@ -42,7 +42,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             while (candidate != null)
             {
 
-                if (candidate.TryGetMappedFile(remaining, out var sourceFileInfo))
+                if (candidate.TryGetMappedFile(remaining, pathString, out var sourceFileInfo))
                 {
                     return sourceFileInfo;
                 }

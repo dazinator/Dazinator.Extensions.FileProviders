@@ -14,12 +14,24 @@ namespace Dazinator.Extensions.FileProviders.Mapping
 
     public class FileMap
     {
+        private readonly DirectoryFileInfo _cachedDirectoryInfo;
+
+        public FileMap() : this("/")
+        {
+
+        }
+
+        public FileMap(PathString path)
+        {
+            Path = path;
+            _cachedDirectoryInfo = new DirectoryFileInfo(Path);
+        }
 
         private Dictionary<PathString, FileMap> Children { get; set; }
         private Dictionary<PathString, SourceFileInfo> FileNameMappings { get; set; } = null;
         private List<PatternInfo> PatternMappings { get; set; } = null;
 
-        public PathString Path { get; set; } = "/"; // root
+        public PathString Path { get; private set; }
         public FileMap Parent { get; set; } = null;
 
         /// <summary>
@@ -133,9 +145,9 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 Children = new Dictionary<PathString, FileMap>();
             }
 
-            var child = new FileMap();
+            var child = new FileMap(pathString);
             Children.Add(pathString, child);
-            child.Path = pathString;
+            //child.Path = pathString;
             child.Parent = this;
             return child;
         }
@@ -155,21 +167,22 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             return this;
         }
         /// <summary>
-        /// When this node or its descendents do not have an explicit file mapping to a source file,
-        /// the nearest descendent node (the one that has matched most path segments (with no non matches),
-        /// has it's PatternMappings evaluated. If the patterns match then file is requested from the file provider 
-        /// present on the pattern mapping. If no patterns match, then the parents node is checked. We walk up the hierarchy back
-        /// to the root node performing these pattern checks.
-        /// To Summara
+        /// Adds a pattern mapping from this segment Path. 
         /// </summary>
-        public FileMap AddPatternMapping(string pattern, IFileProvider sourceFileProvider)
+        /// <param name="pattern">The glob pattern used to indicate matching files that will be included from the source file provider.</param>
+        /// <param name="sourceFileProvider">The <see cref="IFileProvider"/> that will provide the source items backing this pattern.</param>
+        /// <param name="segmentDepthOfPathToPassToSourceFileProvider">An index indicating the depth of the path (in terms of segments) to start from when building the source file path for requesting items from the source file provider for this pattern. 
+        /// For example if depth is 2 and the full request path is /foo/bar/baz.txt then "baz.txt" is requested from the source provider. If the depth is 1, then "/bar/baz.txt" will be requested from the source file provider. Depth of 0 means "/foo/bar/baz.txt" i.e full path information will be passed to the source file provider.
+        /// If you specify null for this, then the depth will default to the current depth of the segment you are adding this pattern mapping to. For example of you are adding a pattern mapping to "foo/bar" segment with pattern "**" then the depth will be equivalent to "2" meaning "/foo/bar" will not be passed to the source provider and only the remaining unmapped segments will be passed.</param>
+        /// <returns></returns>
+        public FileMap AddPatternMapping(string pattern, IFileProvider sourceFileProvider, int? segmentDepthOfPathToPassToSourceFileProvider = null)
         {
             if (PatternMappings == null)
             {
                 PatternMappings = new List<PatternInfo>();
             }
 
-            PatternMappings.Add(new PatternInfo(Glob.Parse(pattern), sourceFileProvider));
+            PatternMappings.Add(new PatternInfo(Glob.Parse(pattern), sourceFileProvider, segmentDepthOfPathToPassToSourceFileProvider));
             return this;
         }
         private bool TryGetFileFromFileMappings(PathString fileName, out IFileInfo sourceFile)
@@ -203,7 +216,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             return sourceFile;
         }
 
-        private bool TryGetFileFromPatternMappings(PathString path, out IFileInfo sourceFile)
+        private bool TryGetFileFromPatternMappings(PathString path, PathString fullRequestFilepath, out IFileInfo sourceFile)
         {
             sourceFile = null;
             if (PatternMappings == null)
@@ -211,9 +224,11 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 return false;
             }
 
+            var segments = fullRequestFilepath.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
+
             foreach (var patternMapping in PatternMappings)
             {
-                if (patternMapping.TryGetMatchedFileInfo(path, out sourceFile))
+                if (patternMapping.TryGetMatchedFileInfo(path, segments, out sourceFile))
                 {
                     return true;
                 }
@@ -222,14 +237,21 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             return false;
         }
 
-        public bool TryGetMappedFile(PathString path, out IFileInfo sourceFile)
+        /// <summary>
+        /// Get the file as mapped at this segment of the path.
+        /// </summary>
+        /// <param name="path">The remaining segments of the request path at this level of the mapping heirarchy.</param>
+        /// <param name="fullRequestpath">The full request path.</param>
+        /// <param name="sourceFile"></param>
+        /// <returns></returns>
+        public bool TryGetMappedFile(PathString remainingPath, PathString fullRequestpath, out IFileInfo sourceFile)
         {
-            if (TryGetFileFromFileMappings(path, out sourceFile))
+            if (TryGetFileFromFileMappings(remainingPath, out sourceFile))
             {
                 return true;
             }
 
-            return TryGetFileFromPatternMappings(path, out sourceFile);
+            return TryGetFileFromPatternMappings(remainingPath, fullRequestpath, out sourceFile);
         }
 
         public IDirectoryContents GetMappedDirectoryContents()
@@ -250,16 +272,25 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             {
                 foreach (var child in Children)
                 {
-
-                    contents.Add(new DirectoryFileInfo(child.Key.Value.Substring(1)));
-                    //var child = GetMappedFileFromSourceFile(fileMapping.Key, fileMapping.Value);
-                    //  contents.Add(child);
+                    contents.Add(child.Value._cachedDirectoryInfo);
                 }
-
             }
 
             if (PatternMappings != null)
             {
+                // we are only after immediate directory contents ie so top level items from 
+                // the file provider
+                // these will be folders and files that match the pattern.
+                // the pattern could have different possibilities we need to consider:-
+                //   - "*.txt" - only return children matching this name
+                //   - "**/*.txt" - multi-level pattern. Multi-level pattern is kind of redundant because we will only be evaluating the top level itsm
+                //                  in the source directory. However if one is used, each top level item must match the pattern to be included.
+                //                  so /foo.txt would still be a match. If the pattern was "foo/**" then "/foo.txt" would not be included, but "/foo" folder would be included.
+                //                  If the pattern was "foo/bar.txt" then the subfolder "foo" would not be included because it would never match the full pattern.
+                //                  Note: perhaps we should fix this by splitting the pattern to only grab the top level portion? Reason being is we don't want to restrict subfolders from showing up that 
+                //                  contain "potentially" included files, but ideally we do want to exclude subfolders if there is no possiblitly of a match from the pattern.
+                //                  **
+
                 throw new NotImplementedException();
             }
             return new EnumerableDirectoryContents(contents.ToArray());
@@ -283,17 +314,44 @@ namespace Dazinator.Extensions.FileProviders.Mapping
         {
             private readonly Glob _glob;
             private readonly IFileProvider _fileProvider;
+            private readonly int? _sourcePathDepth = null;
 
-            public PatternInfo(Glob glob, IFileProvider fileProvider)
+            /// <summary>
+            /// Create a new pattern mapping.
+            /// </summary>
+            /// <param name="glob"></param>
+            /// <param name="fileProvider"></param>
+            /// <param name="sourcePathDepth">An index indicating the depth of the path (in terms of segments) to start from when building the source file path for requesting items from the source file provider for this pattern. 
+            /// For example if depth is 2 and the full request path is /foo/bar/baz.txt then "baz.txt" is requested from the source provider. If the depth is 1, then "/bar/baz.txt" will be requested from the source file provider. Depth of 0 means "/foo/bar/baz.txt" i.e full path information will be passed to the source file provider.
+            /// If you specify null for this, then the depth will default to the current depth of the segment you are adding this pattern mapping to. For example of you are adding a pattern mapping to "foo/bar" segment with pattern "**" then the depth will be equivalent to "2" meaning "/foo/bar" will not be passed to the source provider and only the remaining unmapped segments will be passed.</param>
+            public PatternInfo(Glob glob, IFileProvider fileProvider, int? sourcePathDepth = null)
             {
                 _glob = glob;
                 _fileProvider = fileProvider;
+                _sourcePathDepth = sourcePathDepth; // when a request path comes in like
+                // /foo/bar/bat.txt
+                // 
             }
-            public bool TryGetMatchedFileInfo(PathString filePath, out IFileInfo matchedFile)
+            public bool TryGetMatchedFileInfo(PathString filePath, string[] fullRequestpathSegments, out IFileInfo matchedFile)
             {
-                if (_glob.IsMatch(filePath))
+                PathString filePathToMatch;
+
+                // If no depth explicitly configured on the pattern mapping,
+                // then match the file path from the current segment depth where this
+                // pattern mapping is added.
+                if (_sourcePathDepth == null)
                 {
-                    matchedFile = _fileProvider.GetFileInfo(filePath);
+                    filePathToMatch = filePath; // use 
+                }
+                else
+                {
+                    var candidateDirectoryPath = string.Join('/', fullRequestpathSegments[_sourcePathDepth.Value..]);
+                    filePathToMatch = string.IsNullOrEmpty(candidateDirectoryPath) ? filePath : new PathString($"/{candidateDirectoryPath}");
+                }
+
+                if (_glob.IsMatch(filePathToMatch))
+                {
+                    matchedFile = _fileProvider.GetFileInfo(filePathToMatch);
                     return true;
                 }
                 matchedFile = null;
