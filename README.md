@@ -121,8 +121,8 @@ Allows you to map files from other sources into a virtual directory of sorts, us
  var sourceFileProvider = new InMemoryFileProvider();
 
  // add some source file at `/foo/bar/test.txt`
- sourceFileProvider.Directory.AddFile(sourceDirectory, 
-                    new StringFileInfo("test.txt", "/foo/bar"));
+ sourceFileProvider.Directory.AddFile("/foo/bar", 
+                    new StringFileInfo("dummy contents", "test.txt"));
 
 
 // Create the map first:
