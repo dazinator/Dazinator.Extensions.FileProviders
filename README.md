@@ -148,6 +148,9 @@ var sourceFileProvider = new InMemoryFileProvider();
  // add some source files at `/foo/bar/test.txt` and `/foo/bar/test.csv`
  sourceFileProvider.Directory.AddFile(sourceDirectory, 
                     new StringFileInfo("test.txt", "/foo/bar"));
+ sourceFileProvider.Directory.AddFile(sourceDirectory, 
+                    new StringFileInfo("test.csv", "/foo/bar"));
+
 
 
 // Create the map first:
