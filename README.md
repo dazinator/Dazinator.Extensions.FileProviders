@@ -146,10 +146,10 @@ Assert.True(file.Exists);
 var sourceFileProvider = new InMemoryFileProvider();
 
  // add some source files at `/foo/bar/test.txt` and `/foo/bar/test.csv`
- sourceFileProvider.Directory.AddFile(sourceDirectory, 
-                    new StringFileInfo("test.txt", "/foo/bar"));
- sourceFileProvider.Directory.AddFile(sourceDirectory, 
-                    new StringFileInfo("test.csv", "/foo/bar"));
+ sourceFileProvider.Directory.AddFile("/foo/bar", 
+                    new StringFileInfo("dummy contents", "test.txt"));
+ sourceFileProvider.Directory.AddFile("/foo/bar", 
+                    new StringFileInfo("dummy contents", "test.csv"));
 
 
 
