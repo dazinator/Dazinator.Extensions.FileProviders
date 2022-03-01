@@ -200,7 +200,12 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
             var contentItems = folderContents.ToArray();
             Assert.Equal(expectedResults.Length, contentItems.Length);
-            Assert.True(contentItems.Select(a => a.Name).SequenceEqual(expectedResults));
+
+            for (int i = 0; i < expectedResults.Length; i++)
+            {
+                Assert.Equal(expectedResults[i], contentItems[i].Name);
+            }
+            // Assert.True(contentItems.Select(a => a.Name).SequenceEqual(expectedResults));
 
         }
 
