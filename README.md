@@ -174,8 +174,8 @@ Assert.False(file.Exists);
 
 When getting the directory contents, the directory is built from all attached source providers in the hierarchy.
 
-For example, if you map "**" from provider A on request path "/foo" and that provider happends to a have a folder in it's root directory named `/bar`
-and you also map "**" from provider B on request path "/foo/bar" and that provider has a file named "foo.txt"
+For example, if you map `**` from provider A on request path "/foo" and that provider happends to a have a folder in it's root directory named `/bar`
+and you also map `**` from provider B on request path "/foo/bar" and that provider has a file named "foo.txt"
 When you call `GetDirectoryContents()` for path "/foo/bar"
 
 - The most specific matching mapping is evaluated first, in this case provider B will include "foo.txt" in the returned contents.
