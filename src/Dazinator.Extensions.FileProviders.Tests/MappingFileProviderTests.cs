@@ -86,7 +86,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
         // Format goes:
         // - Arg Index 0 = requestFolderPath. This ise path passed to the file provider when getting the directory contents. e.g "/foo/bar"
-        // - Arg Index 1 = expectedResults. This is a string array containing the expected results. Each string in the array corresponds to a FileInfo.Name of na item that is expected to be returned in the IDirectoryContents result. The order must also match. 
+        // - Arg Index 1 = expectedResults. This is a string array containing the expected results. Each string in the array corresponds to a FileInfo.Name of na item that is expected to be returned in the IDirectoryContents result. The order does not need to match. 
         // - Arg Index 2 = fileMappings. This as an array, where each item corresponds to an explicit file mapping that will setup for the test. Each string entry, is split on the colon ":", to establish: [0]- the request path the file should be mapped on (i.e as a client will provide it) and [1] the source path the file is mapped to in the underlying source file provider. A dummy source file is automatically created in the InMemory file provider matching the source file path.
         // - Arg Index 3 = patternMappings. This is an array, where each item corresponds to pattern mapping. Each item is split on a colon ":" to give two parts: [0] and [1]. The first part [0] is split on a comma "," into [0]-A and [0]-B. [0]-A is the request path under which the pattern mapping will be added. e.g /foo/bar. [0]-B is the pattern itself e.g "**".
         //      The second part, [1], relates to a comma delimited string defining the files that will be created in the underlying source file provider backing the pattern mapping. These files will automatically be created in the InMemoryFile provider behind the patten mapping ready for resolution.
@@ -201,11 +201,13 @@ namespace Dazinator.Extensions.FileProviders.Tests
             var contentItems = folderContents.ToArray();
             Assert.Equal(expectedResults.Length, contentItems.Length);
 
+            var contentItemNames = contentItems.Select(c => c.Name).ToArray();
+
             for (int i = 0; i < expectedResults.Length; i++)
             {
-                Assert.Equal(expectedResults[i], contentItems[i].Name);
+                var expected = expectedResults[i];
+                Assert.Contains<string>(expected, contentItemNames);
             }
-            // Assert.True(contentItems.Select(a => a.Name).SequenceEqual(expectedResults));
 
         }
 

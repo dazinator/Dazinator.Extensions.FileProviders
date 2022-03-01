@@ -11,6 +11,7 @@ Current FileProvider Implementations include:
 - PrependBasePathFileProvider
 - InMemoryFileProvider
 - GlobPatternFilterFileProvider
+- MappingFileProvider
 
 ## PrependBasePathFileProvider 
 
@@ -104,3 +105,117 @@ Example:
 ```
 
 Note: you can pass in an array of both `include` and `exclude` glob expressions. Glob evaluation is done via the `DotNet.Glob` dependency.
+
+
+## MappingFileProvider
+
+Allows you to map files from other sources into a virtual directory of sorts, using a combiation of:-
+
+- Explicit mappings (i.e a mapping that maps a particular file from a source path within a source `IFileProvider`, to the requested path)
+- Pattern mappings (i.e a mapping that maps many files or directories onto the request path,from a source `IFileProvider` - where they match the specified `glob` pattern)
+
+### Example of an explicit mapping
+
+```csharp
+
+ var sourceFileProvider = new InMemoryFileProvider();
+
+ // add some source file at `/foo/bar/test.txt`
+ sourceFileProvider.Directory.AddFile(sourceDirectory, 
+                    new StringFileInfo("test.txt", "/foo/bar"));
+
+
+// Create the map first:
+var fileMap = new FileMap();
+fileMap.MapPath("/my-files", (pathMappings) =>
+        {            
+          pathMappings.AddFileNameMapping("/test.txt", sourceFileProvider, "/foo/bar/test.txt);        
+        });
+
+var mappingFileProvider = new MappingFileProvider(fileMap);
+var file = mappingFileProvider.GetFileInfo("/my-files/test.txt");
+Assert.True(file.Exists);
+
+```
+
+
+### Example of a pattern mapping
+
+
+```csharp
+var sourceFileProvider = new InMemoryFileProvider();
+
+ // add some source files at `/foo/bar/test.txt` and `/foo/bar/test.csv`
+ sourceFileProvider.Directory.AddFile(sourceDirectory, 
+                    new StringFileInfo("test.txt", "/foo/bar"));
+
+
+// Create the map first:
+var fileMap = new FileMap();
+fileMap.MapPath("/my-files", (pathMappings) =>
+        {            
+          pathMappings.AddPatternMapping("**/*.txt", inMemoryFileProvider);               
+        });
+
+var mappingFileProvider = new MappingFileProvider(fileMap);
+var file = mappingFileProvider.GetFileInfo("/my-files/test.txt");
+Assert.True(file.Exists);
+
+var file = mappingFileProvider.GetFileInfo("/my-files/test.csv");
+Assert.False(file.Exists);
+
+```
+
+
+### Pattern Mappings and GetDirectoryContents
+
+When getting the directory contents, the directory is built from all attached source providers in the hierarchy.
+
+For example, if you map "**" from provider A on request path "/foo" and that provider happends to a have a folder in it's root directory named `/bar`
+and you also map "**" from provider B on request path "/foo/bar" and that provider has a file named "foo.txt"
+When you call `GetDirectoryContents()` for path "/foo/bar"
+
+- The most specific matching mapping is evaluated first, in this case provider B will include "foo.txt" in the returned contents.
+- Each parent segment of the request path is then evaluated back to the root "/" so in this case provider A will also include the contents of it's "/bar" folder.
+
+
+In the case of a conflict (i.e an item is to be included that has the same name) - the first provider evaluated wins, so in this case the provider that maps closest (most explicitly) to the request path wins (or overrides is another way to think about it).
+e.g in the case above, provider B overrides any conflicting items from provider A.
+
+
+### Static Assets
+
+Razor / msbuild tooling in .NET 6 outputs a static web assets manifest file for your projects when you build them locally.
+When running an asp.net core host on a Development environment, your application (The Host) discoveres this mapping file and configures an internal `IFileProvider` to asp.net core to create 
+a very similar virtual directory structure to what's described here. This is not accessible to you for general use.
+The `MappingFileProvider` offers very similar functionality, but in a way that is accessible for use in general applications if desirable.
+To facilitate the serving of static assets, there is an extension method that can be used to build a `FileMap` from the native manifest that razor tooling produces.
+
+1. Load the manifest from the file:
+
+```
+            var manifestFile = fp.GetFileInfo(resourcePath);
+            using (var stream = manifestFile.CreateReadStream())
+            {
+                var manifest = StaticWebAssetManifest.Parse(stream);              
+
+                return manifest;
+            }
+```
+
+2. Use the manifest to build a map. Note when building the map from a manifest you must provide a 
+factory function to return the `IFileProvider`s that will back the list of `ContentRoot`s specified in the manifest. Typically
+you will want to return the PhysicalFileProvider`s. I use InMemory ones as this was test code.
+
+```
+ var map = new FileMap();
+
+ map.AddFromStaticWebAssetsManifest(manifest, (contentRoot) =>
+ {
+     var provider = new InMemoryFileProvider();
+     return provider;
+ });
+
+ ```
+
+ Now that you have a map you can create a new `MappingFileProvider` as shown previously.
