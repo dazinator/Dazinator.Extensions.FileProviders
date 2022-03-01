@@ -55,7 +55,7 @@ namespace Dazinator.Extensions.FileProviders.PrependBasePath
             if (string.IsNullOrEmpty(subpath))
             {
                 // return root / base directory.
-                return new EnumerableDirectoryContents(_baseDirectoryFileInfo);
+                return new EnumerableDirectoryContents(true, _baseDirectoryFileInfo);
             }
             PathString newPath;
             if (TryMapSubPath(subpath, out newPath))

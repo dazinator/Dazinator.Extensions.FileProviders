@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.FileProviders;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -6,14 +7,16 @@ namespace Dazinator.Extensions.FileProviders
 {
     public class EnumerableDirectoryContents : IDirectoryContents
     {
+        private readonly bool _exists;
         private readonly IFileInfo[] _files;
 
-        public EnumerableDirectoryContents(params IFileInfo[] files)
+        public EnumerableDirectoryContents(bool exists, params IFileInfo[] files)
         {
+            _exists = exists;
             _files = files;
         }
 
-        public bool Exists => true;
+        public bool Exists => _exists;
 
         public IEnumerator<IFileInfo> GetEnumerator()
         {
@@ -28,6 +31,5 @@ namespace Dazinator.Extensions.FileProviders
             return this.GetEnumerator();
         }
     }
-
 
 }

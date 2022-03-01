@@ -21,7 +21,7 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
             // The root folder is allowed to be called /.           
             if (subpath.Length > 1 && subpath?.Last() == '/')
             {
-                subpath = subpath.Substring(0, subpath.Length - 1);
+                subpath = subpath.Substring(0);
             }
             var filteredResults = new GlobMatchingEnumerableFileInfos(subpath, false, _inner, _evaluator);
             return new GlobMatchingEnumerableDirectoryContents(filteredResults);

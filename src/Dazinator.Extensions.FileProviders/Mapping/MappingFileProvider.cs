@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
@@ -37,14 +38,17 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 pathString = $"/{subpath}";
             }
 
-            _map.TryNavigateTo(pathString, out var candidate, out var remaining);
+            _map.TryNavigateTo(pathString, out var candidate, out var remaining, out var segments);
 
             while (candidate != null)
             {
 
-                if (candidate.TryGetMappedFile(remaining, pathString, out var sourceFileInfo))
+                if (candidate.TryGetMappedFile(remaining, segments, out var sourceFileInfo))
                 {
-                    return sourceFileInfo;
+                    if (sourceFileInfo.Exists && !sourceFileInfo.IsDirectory)
+                    {
+                        return sourceFileInfo;
+                    }
                 }
 
                 if (candidate.Parent != null)
@@ -76,20 +80,24 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 pathString = $"/{subpath}";
             }
 
-            if (_map.TryNavigateTo(pathString, out var candidate, out var remaining))
-            {
-                // we have mappings for this path, they take precedence over any patterns higher up
+            _map.TryNavigateTo(pathString, out var candidate, out var remaining, out var segments);
 
-
-                // get any files from explicit file mappings on the current path,
-                // plus any items matched
-                var mappedDirectoryContents = candidate.GetMappedDirectoryContents();
-                return mappedDirectoryContents;
-
-            }
-
+            var directoryContents = new List<IDirectoryContents>(segments.Length);
             while (candidate != null)
             {
+                // need to recurse back from top level directory through to root
+                // at each level, we include directory contents pattern mapped at that level.
+                // so for example, /foo/bar/bat could be mapped to provider A
+                // whilst /foo could have a pattern mapping that includes /bar/bat folder from provider B
+                // we need A's to take precendence, but for B's contents of that directory to also be added
+                // and to do this at each level back to the root to build the full directory contents.
+                // Note: This isn't necessary when resolving files, as we can stop at the first file we find when working back
+                // towards the root segment in this way.
+                if (candidate.GetMappedDirectoryContents(remaining, segments, out var contents))
+                {
+                    directoryContents.Add(contents);
+                }
+
                 if (candidate.Parent != null)
                 {
                     remaining = candidate.Path.Add(remaining);
@@ -98,8 +106,15 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 candidate = candidate.Parent;
             }
 
-            throw new NotImplementedException();
+            if (directoryContents.Count > 0)
+            {
+                return new CompositeDirectoryContents(directoryContents);
+            }
+
+            return NotFoundDirectoryContents.Singleton;
+
         }
+
         public IChangeToken Watch(string filter)
         {
             return NullChangeToken.Singleton;
