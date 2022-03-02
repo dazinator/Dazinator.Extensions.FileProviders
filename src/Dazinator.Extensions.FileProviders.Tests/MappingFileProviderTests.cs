@@ -211,6 +211,40 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
         }
 
+        [Fact]
+        public async Task Can_Get_Correct_DirectoryContents_After_Removing_File()
+        {
+            var inMemoryFileProvider = new InMemoryFileProvider();
+
+            FileMap fileMap = new FileMap();
+            // add an explicit mapping for each file
+            AddInMemoryFile(inMemoryFileProvider, "/foo/bar/bat.txt");
+
+            fileMap.MapPath("/text-files", (folderPathMappings) =>
+            {
+                folderPathMappings.AddFileNameMapping($"/bat.txt", inMemoryFileProvider, "/foo/bar/bat.txt");
+            });
+
+            var sut = new MappingFileProvider(fileMap);
+            var folderContents = sut.GetDirectoryContents("/text-files");
+            Assert.NotNull(folderContents);
+            var folderItems = folderContents.ToList();
+            Assert.Single(folderItems);
+            Assert.True(folderItems[0].Exists);
+
+
+            // delete file from undelrying provider
+            var item = inMemoryFileProvider.Directory.GetItem("/foo/bar/bat.txt");
+            item.Delete();
+
+
+            folderContents = sut.GetDirectoryContents("/text-files");
+            folderItems = folderContents.ToList();
+            Assert.Empty(folderItems);
+
+
+
+        }
 
         [Theory]
         [InlineData("root.txt", "root.txt", "**", null)]

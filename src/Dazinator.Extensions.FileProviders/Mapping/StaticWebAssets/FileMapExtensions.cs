@@ -39,7 +39,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
                     foreach (var pattern in node.Patterns)
                     {
                         var fp = fps[pattern.ContentRoot];
-                        requestPathNode.AddPatternMapping(pattern.Pattern, fp);
+                        requestPathNode.AddPatternMapping(pattern.Pattern, fp, pattern.Depth);
                     };
                 }
 

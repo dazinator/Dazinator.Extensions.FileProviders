@@ -11,7 +11,6 @@ namespace Dazinator.Extensions.FileProviders.Mapping
     public class FileMap
     {
         private readonly DirectoryFileInfo _cachedDirectoryInfo;
-        private Lazy<IDirectoryContents> _explicitDirectoryContents;
 
 
         public FileMap() : this("/")
@@ -24,7 +23,6 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             Path = path;
             _cachedDirectoryInfo = string.IsNullOrEmpty(path) ? new DirectoryFileInfo(string.Empty) :
                 new DirectoryFileInfo(path.Value.Substring(1)); // remove leading "/"
-            _explicitDirectoryContents = new Lazy<IDirectoryContents>(GetExplicitDirectoryContents);
         }
 
         private IDirectoryContents GetExplicitDirectoryContents()
@@ -41,7 +39,10 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                     foreach (var fileMapping in FileNameMappings)
                     {
                         var mappedFileInfo = GetMappedFileFromSourceFile(fileMapping.Key, fileMapping.Value);
-                        contents.Add(mappedFileInfo);
+                        if (mappedFileInfo.Exists)
+                        {
+                            contents.Add(mappedFileInfo);
+                        }
                     }
                 }
 
@@ -304,9 +305,9 @@ namespace Dazinator.Extensions.FileProviders.Mapping
         /// <exception cref="NotImplementedException"></exception>
         public bool GetMappedDirectoryContents(PathString remainingPath, string[] requestPathSegments, out IDirectoryContents directoryContents)
         {
-            // Only include explcit contents when there is no remaining path - i.e these contents that are mapped
-            // relate to the request path exactly and so we include them.    
-            directoryContents = (remainingPath == null || remainingPath == "/") ? _explicitDirectoryContents.Value : NotFoundDirectoryContents.Singleton;
+            // Only include explcit contents (files and directories explicitly mapped for the target path)
+            // when there is no remaining path - i.e these contents only relate to the request path exactly, if we are at a parent path they are not relevent.
+            directoryContents = (remainingPath == null || remainingPath == "/") ? GetExplicitDirectoryContents() : NotFoundDirectoryContents.Singleton;
 
             // Patterns apply at all levels.
             IDirectoryContents patternMappedContents = null;
@@ -354,6 +355,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
 
             public IFileInfo GetSourceFileInfo()
             {
+
                 return SourceFileProvider.GetFileInfo(SourcePath);
 
             }
