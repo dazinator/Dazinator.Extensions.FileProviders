@@ -23,10 +23,11 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
             Func<string, IFileProvider> contentRootFileProviderFactory,
             Func<FileMap, bool> isPathMappingAllowed = null)
         {
-            IFileProvider[] fps = new IFileProvider[manifest.ContentRoots.Length];
+            Lazy<IFileProvider>[] fps = new Lazy<IFileProvider>[manifest.ContentRoots.Length];
             for (int i = 0; i < fps.Length; i++)
             {
-                fps[i] = contentRootFileProviderFactory(manifest.ContentRoots[i]);
+                var indexCaptured = i;
+                fps[i] = new Lazy<IFileProvider>(() => contentRootFileProviderFactory(manifest.ContentRoots[indexCaptured]));
                 // patterns[i] = new Tuple<List<string>, List<string>>(new List<string>(), new List<string>());
             }
 
@@ -50,7 +51,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
                     foreach (var pattern in node.Patterns)
                     {
                         var fp = fps[pattern.ContentRoot];
-                        requestPathNode.AddPatternMapping(pattern.Pattern, fp, pattern.Depth);
+                        requestPathNode.AddPatternMapping(pattern.Pattern, fp.Value, pattern.Depth);
                     };
                 }
 
@@ -66,7 +67,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
                     // we wan't a single one for the parent path, which has patterns, and files added to it as seperate concepts individually.
                     var asset = node.Match;
                     var fp = fps[asset.ContentRoot];
-                    requestPathNode.AddFileNameMapping($"/{key}", fp, asset.Path);
+                    requestPathNode.AddFileNameMapping($"/{key}", fp.Value, asset.Path);
                 }
 
                 if (node.Children == null)
@@ -90,7 +91,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
                     if (asset != null)
                     {
                         var fp = fps[asset.ContentRoot];
-                        requestPathNode.AddFileNameMapping($"/{child.Key}", fp, asset.Path);
+                        requestPathNode.AddFileNameMapping($"/{child.Key}", fp.Value, asset.Path);
                     }
                     else
                     {
