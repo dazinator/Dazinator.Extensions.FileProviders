@@ -3,20 +3,25 @@ using Microsoft.Extensions.FileProviders;
 using System;
 using Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets;
 using static Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets.StaticWebAssetManifest;
+using Microsoft.AspNetCore.Http;
 
 namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
 {
     public static class FileMapExtensions
     {
-        public static FileMap AddFromStaticWebAssetsManifest(this FileMap map, StaticWebAssetManifest manifest, Func<string, IFileProvider> contentRootFileProviderFactory)
+        public static FileMap AddFromStaticWebAssetsManifest(this FileMap map,
+            StaticWebAssetManifest manifest,
+            Func<string, IFileProvider> contentRootFileProviderFactory,
+            Func<FileMap, bool> isPathMappingAllowed = null)
         {
-            PopulateFromManifest(map, manifest, contentRootFileProviderFactory);
+            PopulateFromManifest(map, manifest, contentRootFileProviderFactory, isPathMappingAllowed);
             return map;
         }
 
         private static void PopulateFromManifest(FileMap map,
             StaticWebAssetManifest manifest,
-            Func<string, IFileProvider> contentRootFileProviderFactory)
+            Func<string, IFileProvider> contentRootFileProviderFactory,
+            Func<FileMap, bool> isPathMappingAllowed = null)
         {
             IFileProvider[] fps = new IFileProvider[manifest.ContentRoots.Length];
             for (int i = 0; i < fps.Length; i++)
@@ -33,6 +38,12 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
                 var key = tuple.Item1;
                 var node = tuple.Item2;
                 var requestPathNode = tuple.Item3;
+
+                if (!(isPathMappingAllowed?.Invoke(requestPathNode) ?? true))
+                {
+                    // skip processing of mappings for this path as its not allowed so will be omitted from the mapping.
+                    continue;
+                }
 
                 if (node.Patterns != null)
                 {
@@ -83,7 +94,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
                     }
                     else
                     {
-                        // must be processed as a potential parent.                       
+
                         var nextParentNode = requestPathNode.AddChild($"/{child.Key}");
                         stack.Push(new Tuple<string, StaticWebAssetNode, FileMap>(child.Key, child.Value, nextParentNode));
                     }

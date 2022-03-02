@@ -54,6 +54,36 @@ namespace Dazinator.Extensions.FileProviders.Tests
                 Assert.NotNull(fileMap);
 
             }
+
+            [Fact]
+            public async Task Can_Populate_From_StaticWebAssetsManifest_And_Exclude_Paths()
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var fp = new ManifestEmbeddedFileProvider(assembly);
+                var manifestFile = fp.GetFileInfo(StaticWebAssetsFileResourcePath);
+                var manifest = TestExtensions.LoadStaticWebAssetManifestFromEmbeddedResource(StaticWebAssetsFileResourcePath);
+
+                var map = new FileMap();
+
+                var inMemoryProviders = new List<InMemoryFileProvider>();
+                map.AddFromStaticWebAssetsManifest(manifest, (contentRoot) =>
+                {
+                    var provider = new InMemoryFileProvider();
+                    inMemoryProviders.Add(provider);
+                    return provider;
+                }, (m) =>
+                {
+                    var allowed = !m.Path.Value?.StartsWith("/.") ?? true;
+                    return allowed;
+                });
+
+
+                Assert.True(map.TryGetChild("/.spa", out var fileMap));
+                Assert.False(fileMap.TryGetChild("/a.txt", out var childMap));
+                Assert.Null(childMap);
+
+            }
+
         }
 
         [Theory]

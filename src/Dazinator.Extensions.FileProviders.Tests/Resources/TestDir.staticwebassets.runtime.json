@@ -45,6 +45,18 @@
             }
           }
         }
+      },
+      ".spa": {
+         "Children": {
+          "a.txt": {
+            "Children": null,
+            "Asset": {
+              "ContentRootIndex": 0,
+              "SubPath": "txt/a.txt"
+            },
+            "Patterns": null
+          }         
+        }
       }
     },
     "Patterns": [

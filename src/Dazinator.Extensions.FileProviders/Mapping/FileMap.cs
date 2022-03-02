@@ -162,6 +162,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             child.Parent = this;
             return child;
         }
+
         public FileMap AddFileNameMapping(PathString fileName, IFileProvider sourceFileProvider, string sourcePath)
         {
             if (FileNameMappings == null)
