@@ -12,7 +12,7 @@ namespace Dazinator.Extensions.FileProviders
         private Object _lock = new object();
         public MemoryStreamFileInfo(MemoryStream contents, string name)
         {
-            _stream = contents;            
+            _stream = contents;
             LastModified = DateTimeOffset.UtcNow;
             IsDirectory = false;
             Name = name;

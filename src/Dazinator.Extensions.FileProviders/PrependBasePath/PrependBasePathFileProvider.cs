@@ -37,7 +37,8 @@ namespace Dazinator.Extensions.FileProviders.PrependBasePath
                 }
 
                 PathString remaining;
-                if (originalPathString.HasValue && originalPathString.StartsWithSegments(_basePath, out remaining))
+                if (originalPathString.HasValue &&
+                    originalPathString.StartsWithSegments(_basePath, out remaining))
                 {
                     // var childPath = originalPathString.Remove(0, _basePath.Value.Length);
                     newSubPath = remaining;
@@ -54,7 +55,7 @@ namespace Dazinator.Extensions.FileProviders.PrependBasePath
             if (string.IsNullOrEmpty(subpath))
             {
                 // return root / base directory.
-                return new EnumerableDirectoryContents(_baseDirectoryFileInfo);
+                return new EnumerableDirectoryContents(true, _baseDirectoryFileInfo);
             }
             PathString newPath;
             if (TryMapSubPath(subpath, out newPath))

@@ -5,7 +5,7 @@ skip_tags: true
 install:
   - choco install gitversion.portable -pre -y
   - cinst gitlink -y -version 2.4.1
-image: Visual Studio 2017 
+image: Visual Studio 2022 
 assembly_info:
   patch: false
 before_build:
@@ -22,6 +22,6 @@ artifacts:
 deploy:
   provider: NuGet
   api_key:
-    secure: fv0AzEtZznVqb3V1d5JaR62XK5eQuyySgBP2J54HqFQXM01jMqKXHiLOOIdVsa9H
+    secure: FKbUAoq5UFzB6qmajL9N//y3XyBQ0nhPOjh26UteP5nLeGBLyLJaZ9udpKZRvspr
   skip_symbols: false
   artifact: /.*\.nupkg/

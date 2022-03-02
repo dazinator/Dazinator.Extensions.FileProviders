@@ -16,7 +16,7 @@ namespace Dazinator.Extensions.FileProviders.InMemory.Directory
         IFolderDirectoryItem GetFolder(string path);
         IFolderDirectoryItem GetOrAddFolder(string directory);
         IEnumerable<IDirectoryItem> Search(string globPattern);
-      
+
 
     }
 }

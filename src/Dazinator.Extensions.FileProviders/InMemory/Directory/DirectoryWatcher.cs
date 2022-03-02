@@ -294,7 +294,7 @@ namespace Dazinator.Extensions.FileProviders.InMemory.Directory
         {
             // Only raise the event if the old or new item (i.e file or folder could have been renamed)
             // matches a pattern.
-           
+
             var newItemMatches = GetMatchingFilters(args.NewItem.Path).ToArray();
             var oldItemMatches = GetMatchingFilters(args.OldItem.Path).ToArray();
             var unionMatches = newItemMatches.Union(oldItemMatches).ToArray();
@@ -326,7 +326,7 @@ namespace Dazinator.Extensions.FileProviders.InMemory.Directory
         public void AddFilter(string pattern)
         {
             // remove starting "/"
-            if(pattern.StartsWith("/"))
+            if (pattern.StartsWith("/"))
             {
                 pattern = pattern.Remove(0, 1);
             }

@@ -32,7 +32,7 @@ namespace Dazinator.Extensions.FileProviders
             var results = new GlobMatchingEnumerableFileInfos("", true, fileProvider, includePatterns);
             return results;
         }
-     
+
 
         /// <summary>
         /// returns all items in the directory that match the specified glob pattern.

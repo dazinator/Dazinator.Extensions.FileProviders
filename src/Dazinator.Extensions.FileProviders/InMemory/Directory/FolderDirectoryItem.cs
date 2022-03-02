@@ -351,6 +351,7 @@ namespace Dazinator.Extensions.FileProviders.InMemory.Directory
 
         public IEnumerator<IDirectoryItem> GetEnumerator()
         {
+
             return Items.Values.GetEnumerator();
         }
 

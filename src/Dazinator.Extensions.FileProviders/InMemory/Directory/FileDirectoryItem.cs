@@ -8,7 +8,7 @@ namespace Dazinator.Extensions.FileProviders.InMemory.Directory
 
         public FileDirectoryItem(IFileInfo fileInfo, IFolderDirectoryItem parentFolder) : this(fileInfo, parentFolder, true)
         {
-            
+
         }
 
         protected FileDirectoryItem(IFileInfo fileInfo, IFolderDirectoryItem parentFolder, bool listenToParent) : base(fileInfo, parentFolder, listenToParent)
@@ -45,9 +45,9 @@ namespace Dazinator.Extensions.FileProviders.InMemory.Directory
             }
 
             ApplyUpdate(newFileInfo);
-           
+
         }
-        
+
         public override void ApplyUpdate(IFileInfo newFileInfo)
         {// take a snapshot of current directory item with the old file.
             var oldItem = new FileDirectoryItem(this.FileInfo, this.ParentFolder, false);
@@ -62,6 +62,6 @@ namespace Dazinator.Extensions.FileProviders.InMemory.Directory
             Visitor.Visit(this);
         }
 
-      
+
     }
 }

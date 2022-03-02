@@ -17,7 +17,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
             // Arrange
 
             var directory = new InMemoryDirectory();
-           
+
             // Add some files
             directory.AddFile("/foo", new StringFileInfo("greetings", "bar.txt"));
             directory.AddFile("/foo", new StringFileInfo("another", "baz.txt"));
@@ -73,7 +73,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
             var results = testProvider.Search("/foo/*.txt", "/bar/bar.txt").ToArray();
             Assert.NotNull(results);
             Assert.Equal(3, results.Length);
-          
+
         }
 
         [Fact]
