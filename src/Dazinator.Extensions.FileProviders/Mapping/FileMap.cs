@@ -116,36 +116,6 @@ namespace Dazinator.Extensions.FileProviders.Mapping
         }
 
 
-        /// <summary>
-        /// Tries to navigate each segment of the <see cref="PathString"/> finding the existing child map for that segment. The out parameters include the map for the last segment that was matched, plus any remaining path segments that there was no map for.
-        /// </summary>
-        /// <param name="requestPath"></param>
-        /// <param name="map"></param>
-        /// <param name="remaining"></param>
-        /// <returns></returns>
-        public bool TryNavigateTo(PathString requestPath, out FileMap map, out PathString remaining, out string[] requestPathSegments)
-        {
-            // navigate to the node for this file path.
-            requestPathSegments = requestPath.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            int depth = 0;
-            remaining = null;
-            //PathString matchedPath = "/";
-            map = this;
-            for (var i = 0; i < requestPathSegments.Length; i++)
-            {
-                if (map.TryGetChild($"/{requestPathSegments[i]}", out var child))
-                {
-                    map = child;
-                    depth = depth + 1;
-                    continue;
-                }
-
-                remaining = new PathString($"/{string.Join("/", requestPathSegments[depth..])}");
-                return false;
-            }
-
-            return true;
-        }
 
         public bool TryGetChild(PathString path, out FileMap child)
         {
