@@ -29,7 +29,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             }
 
             PathString pathString;
-            if (subpath.StartsWith('/'))
+            if (subpath[0] == '/')
             {
                 pathString = subpath;
             }
@@ -73,7 +73,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping
             }
 
             PathString pathString;
-            if (subpath.StartsWith('/'))
+            if (subpath[0] == '/')
             {
                 pathString = subpath;
             }
