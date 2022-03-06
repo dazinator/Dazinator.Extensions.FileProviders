@@ -25,7 +25,6 @@ namespace Dazinator.Extensions.FileProviders.Tests
                 var manifest = TestExtensions.LoadStaticWebAssetManifestFromEmbeddedResource(StaticWebAssetsFileResourcePath);
                 Assert.NotNull(manifest);
             }
-
         }
 
         public class FileMapTests
