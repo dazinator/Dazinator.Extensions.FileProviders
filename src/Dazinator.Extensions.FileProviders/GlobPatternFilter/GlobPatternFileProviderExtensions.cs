@@ -17,7 +17,7 @@ namespace Dazinator.Extensions.FileProviders
         /// <returns></returns>
         public static IEnumerable<Tuple<string, IFileInfo>> Search(this IFileProvider fileProvider, string globPattern)
         {
-            var results = new GlobMatchingEnumerableFileInfos("", true, fileProvider, globPattern);
+            var results = new GlobMatchingEnumerableFileInfos("/", true, fileProvider, globPattern);
             return results;
         }
 
@@ -29,7 +29,7 @@ namespace Dazinator.Extensions.FileProviders
         /// <returns></returns>
         public static IEnumerable<Tuple<string, IFileInfo>> Search(this IFileProvider fileProvider, params string[] includePatterns)
         {
-            var results = new GlobMatchingEnumerableFileInfos("", true, fileProvider, includePatterns);
+            var results = new GlobMatchingEnumerableFileInfos("/", true, fileProvider, includePatterns);
             return results;
         }
 
@@ -41,7 +41,7 @@ namespace Dazinator.Extensions.FileProviders
         /// <returns></returns>
         public static IEnumerable<Tuple<string, IFileInfo>> Search(this IFileProvider fileProvider, string[] includePatterns, params string[] excludePatterns)
         {
-            var results = new GlobMatchingEnumerableFileInfos("", true, fileProvider, includePatterns, excludePatterns);
+            var results = new GlobMatchingEnumerableFileInfos("/", true, fileProvider, includePatterns, excludePatterns);
             return results;
         }
 

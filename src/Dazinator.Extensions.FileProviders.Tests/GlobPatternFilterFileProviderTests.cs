@@ -2,31 +2,46 @@
 using Microsoft.Extensions.FileProviders;
 using System.IO;
 using Dazinator.Extensions.FileProviders.GlobPatternFilter;
+using System.Linq;
 
 namespace Dazinator.Extensions.FileProviders.Tests
 {
     public class GlobPatternFilterFileProviderTests
     {
-        [Fact]
-        public void Can_Get_Filtered_Directory_Contents()
+        [Theory]
+        [InlineData("", "/TestDir/*.txt", "/TestDir", new string[] { "TestFile.txt" })]
+        [InlineData("TestDir/csv", "[bB]a*.csv", "", new string[] { "ba_1_2.csv" })]
+        public void Can_Get_Filtered_Directory_Contents(string rootFolderDir, string includeGlob, string getDirectoryContentsPath, string[] expectedFileInfoNames)
         {
             // Arrange
             var dir = System.IO.Directory.GetCurrentDirectory();
-            var physicalFileProvider = new PhysicalFileProvider(dir);
+            var rootDir = Path.Combine(dir, rootFolderDir);
+            var physicalFileProvider = new PhysicalFileProvider(rootDir);
 
-            var includeGlob = "/TestDir/*.txt";
+            //  var includeGlob = "/TestDir/*.txt";
             var sut = new GlobPatternFilterFileProvider(physicalFileProvider, new string[] { includeGlob });
 
             // Act
-            var files = sut.GetDirectoryContents("/TestDir");
+            var files = sut.GetDirectoryContents(getDirectoryContentsPath);
             Assert.NotEmpty(files);
 
-            foreach (var file in files)
+            var fileList = files.ToList();
+
+            if (fileList.Count > expectedFileInfoNames.Length)
             {
-                Assert.False(file.IsDirectory, $"directory contents filtered by glob expression {includeGlob} should only contain *.txt file, not directories");
+                throw new System.Exception(string.Join(", ", fileList.Select(a => a.Name)));
+            }
+            Assert.Equal(expectedFileInfoNames.Length, fileList.Count);
+
+
+            foreach (var file in fileList)
+            {
+                Assert.Contains(file.Name, expectedFileInfoNames);
+
+                //   Assert.False(file.IsDirectory, $"directory contents filtered by glob expression {includeGlob} should only contain *.txt file, not directories");
 
                 // $"directory contents filtered by glob expression {includeGlob} should only contain *.txt files, not other extensions"
-                Assert.Equal(".txt", Path.GetExtension(file.Name));
+                //   Assert.Equal(".txt", Path.GetExtension(file.Name));
             }
 
         }

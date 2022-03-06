@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.FileProviders;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Primitives;
-using System.Linq;
+using System;
 
 namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
 {
@@ -18,12 +19,29 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
         public IDirectoryContents GetDirectoryContents(string subpath)
         {
             // check for and remove trailing / because folder names do not end with /.
-            // The root folder is allowed to be called /.           
-            if (subpath.Length > 1 && subpath?.Last() == '/')
+            // The root folder is allowed to be called /.
+            // 
+
+            if (subpath == null)
             {
-                subpath = subpath.Substring(0);
+                throw new ArgumentNullException(nameof(subpath));
             }
-            var filteredResults = new GlobMatchingEnumerableFileInfos(subpath, false, _inner, _evaluator);
+
+            PathString pathString;
+            if (subpath.Length == 0)
+            {
+                pathString = new PathString("/"); // root;
+            }
+            else if (subpath[0] == '/')
+            {
+                pathString = subpath;
+            }
+            else
+            {
+                pathString = $"/{subpath}";
+            }
+
+            var filteredResults = new GlobMatchingEnumerableFileInfos(pathString, false, _inner, _evaluator);
             return new GlobMatchingEnumerableDirectoryContents(filteredResults);
 
         }
