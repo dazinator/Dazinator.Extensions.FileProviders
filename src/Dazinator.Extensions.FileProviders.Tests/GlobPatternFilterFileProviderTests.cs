@@ -89,33 +89,6 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
         }
 
-        [Fact]
-        public void Can_Search_Files()
-        {
-            // Arrange
-
-            var fp = new PhysicalFileProvider(@"C:\Users\DarrellTunnell\OneDrive - Dazinate Ltd\ASB Case\Noise\Audio Recordings");
-            var includeGlob = "??? 202[0-9]/*.wav";
-            var sut = new GlobPatternFilterFileProvider(fp, new string[] { includeGlob });
-
-            // Act
-            var results = sut.Search("**/*");
-            Assert.NotEmpty(results.ToList());
-            foreach (var item in results)
-            {
-                if (!item.Item2.IsDirectory)
-                {
-                    Assert.EndsWith(".wav", item.Item2.Name);
-                }
-
-            }
-
-
-        }
-
-
-
-
         ///// <summary>
         ///// Tests that the request path provider will handle requesting directory contents for subpaths that don't
         ///// start with a leading slash
