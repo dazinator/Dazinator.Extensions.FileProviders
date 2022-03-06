@@ -17,7 +17,8 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
             _includePatterns = includePatterns;
             _excludePatterns = excludePatterns;
 
-
+            // when parsing patterns, if they don'tstart with a "/" rethen add it
+            // as we will always take the paths of files starting with an initial slash for comparison.
             _includeGlobs = new Lazy<List<Glob>>(() =>
             {
                 List<Glob> list = null;
@@ -26,7 +27,15 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
                     list = new List<Glob>(_includePatterns.Length);
                     foreach (var pattern in _includePatterns)
                     {
-                        var glob = Glob.Parse(pattern);
+                        Glob glob;
+                        if (pattern.StartsWith("/"))
+                        {
+                            glob = Glob.Parse(pattern);
+                        }
+                        else
+                        {
+                            glob = Glob.Parse($"/{pattern}");
+                        }
                         list.Add(glob);
                     }
                 }
@@ -41,7 +50,15 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
                     list = new List<Glob>(_excludePatterns.Length);
                     foreach (var pattern in _excludePatterns)
                     {
-                        var glob = Glob.Parse(pattern);
+                        Glob glob;
+                        if (pattern.StartsWith("/"))
+                        {
+                            glob = Glob.Parse(pattern);
+                        }
+                        else
+                        {
+                            glob = Glob.Parse($"/{pattern}");
+                        }
                         list.Add(glob);
                     }
                 }

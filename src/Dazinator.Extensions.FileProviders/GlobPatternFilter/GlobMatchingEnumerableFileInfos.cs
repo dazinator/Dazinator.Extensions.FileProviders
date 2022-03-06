@@ -38,12 +38,14 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
             _recurseDirectories = recurseDirectories;
             _fileProvider = fileProvider;
             _evaluator = evaluator;
+
+            // remove starting slash from any patterns.
         }
 
         public IEnumerator<Tuple<string, IFileInfo>> GetEnumerator()
         {
-            var folderPath = _rootDir;
-            var currentFolder = _fileProvider.GetDirectoryContents(_rootDir);
+            string folderPath = _rootDir.Value.Substring(1) ?? string.Empty; // remove starting "/";
+            var currentFolder = _fileProvider.GetDirectoryContents(folderPath);
             Stack<KeyValuePair<string, IFileInfo>> folders = null;
 
             while (currentFolder != null)
@@ -53,33 +55,33 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
                 // then add them to the stack for later processing.
                 foreach (var item in currentFolder)
                 {
-                    var itemPath = folderPath.Value.Length == 1 ? item.Name : (folderPath.Add($"/{item.Name}").ToString());
+                    var itemPath = folderPath.Length == 0 ? item.Name : $"{folderPath}/{item.Name}";
+
+                    if (item.IsDirectory)
+                    {
+                        if (_recurseDirectories)
+                        {
+                            // we are recursing all directories looking for FILES ONLY.
+                            // add the nested folder to a queue for later processing its items in the loop.
+                            if (folders == null)
+                            {
+                                // lazy allocate the list only if recursing,
+                                // saves an allocation when not recursing.
+                                folders = new Stack<KeyValuePair<string, IFileInfo>>();
+                            }
+                            folders.Push(new KeyValuePair<string, IFileInfo>(itemPath, item));
+                            continue; // don't yield directories we are looking for FILES ONLY.
+                        }
+                        // In this case, we are reporting top level folder contents only, and we want to output ALL DIRECTORIES by default, as glob patterns dont filter out directories
+                        yield return new Tuple<string, IFileInfo>(folderPath, item); // return this directory
+                        continue;
+                    }
 
                     //_rootDir.em string.IsNullOrEmpty(folderPath) $"{folderPath}/{item.Name}";
-                    bool isMatch = _evaluator.IsAllowed(itemPath);
-
+                    bool isMatch = _evaluator.IsAllowed($"/{itemPath}");
                     if (isMatch)
                     {
                         yield return new Tuple<string, IFileInfo>(folderPath, item);
-                    }
-
-                    // include directories by default so we can allow upstream consumers to recurse the directory.
-                    if (!_recurseDirectories && item.IsDirectory)
-                    {
-                        yield return new Tuple<string, IFileInfo>(folderPath, item);
-                    }
-
-                    if (item.IsDirectory && _recurseDirectories)
-                    {
-                        // add the nested folder to a queue for later processing its items in the loop.
-                        if (folders == null)
-                        {
-                            // lazy allocate the list only if recursing,
-                            // saves an allocation when not recursing.
-                            folders = new Stack<KeyValuePair<string, IFileInfo>>();
-                        }
-                        folders.Push(new KeyValuePair<string, IFileInfo>(itemPath, item));
-                        continue;
                     }
                 }
 
@@ -88,7 +90,7 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
                 if (_recurseDirectories && folders.Count > 0)
                 {
                     var folderItem = folders.Pop();
-                    folderPath = $"/{folderItem.Key}";
+                    folderPath = folderItem.Key;
                     currentFolder = _fileProvider.GetDirectoryContents(folderPath);
                 }
                 else

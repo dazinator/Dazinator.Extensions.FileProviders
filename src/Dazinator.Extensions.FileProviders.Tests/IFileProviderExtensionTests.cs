@@ -40,11 +40,11 @@ namespace Dazinator.Extensions.FileProviders.Tests
 
             var expectedFileNames = new Dictionary<string, string> { { "bar.txt", "greetings" }, { "baz.txt", "another" } };
 
-            Assert.Equal("/foo", fileA.Item1);
+            Assert.Equal("foo", fileA.Item1);
             Assert.Contains(fileA.Item2.Name, expectedFileNames.Keys);
             Assert.Equal(expectedFileNames[fileA.Item2.Name], fileA.Item2.ReadAllContent());
 
-            Assert.Equal("/foo", fileB.Item1);
+            Assert.Equal("foo", fileB.Item1);
             Assert.Contains(fileB.Item2.Name, expectedFileNames.Keys);
             Assert.Equal(expectedFileNames[fileB.Item2.Name], fileB.Item2.ReadAllContent());
 
