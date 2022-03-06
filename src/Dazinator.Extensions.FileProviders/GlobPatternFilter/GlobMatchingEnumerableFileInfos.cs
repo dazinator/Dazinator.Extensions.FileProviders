@@ -46,7 +46,6 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
             var currentFolder = _fileProvider.GetDirectoryContents(_rootDir);
             Stack<KeyValuePair<string, IFileInfo>> folders = null;
 
-
             while (currentFolder != null)
             {
                 // loop through all items in the current directory,
@@ -60,6 +59,12 @@ namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
                     bool isMatch = _evaluator.IsAllowed(itemPath);
 
                     if (isMatch)
+                    {
+                        yield return new Tuple<string, IFileInfo>(folderPath, item);
+                    }
+
+                    // include directories by default so we can allow upstream consumers to recurse the directory.
+                    if (!_recurseDirectories && item.IsDirectory)
                     {
                         yield return new Tuple<string, IFileInfo>(folderPath, item);
                     }

@@ -84,8 +84,11 @@ The `InMemoryFileProvider` fully supports `watching` and change tokens. Which me
 
 ## GlobPatternFilterFileProvider
 
-Allows you to wrap an existing `IFileProvider` but specify a list of include / exclude `glob` patterns to filter the content (files and directories) that is accessible.
-
+Allows you to wrap an existing `IFileProvider` but specify a list of include / exclude `glob` patterns to filter the content (files only) that are accessible.
+Note: Folder information is not filtered out, only files will be filtered by the glob expressions.
+For example, if you have a folder in the underlying provider "/foo" and you wrap it with this `GlobPatternFilterFileProvider` and the include pattern
+`bar.txt`, when calling `GetFileInfo("/foo")` it will still return an item for the directory and when calling `GetDirectoryContents("")` it will still include an item for this directory
+even though the directory name doesn't strictly match the pattern. This is because the patterns are applied to files only. This was better for optimisation purposes.
 Example:
 
 ```

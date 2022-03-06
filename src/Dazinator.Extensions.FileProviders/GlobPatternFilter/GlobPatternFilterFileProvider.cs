@@ -5,6 +5,11 @@ using System;
 
 namespace Dazinator.Extensions.FileProviders.GlobPatternFilter
 {
+    /// <summary>
+    /// A file provider that will apply include / exclude glob patterns to filter out files from the underlying directory,
+    /// but that does not flatten the directory in the process. For example, if you apply the include pattern "foo/bar.txt" only the
+    /// foo/bar.txt file will be accessible in the directory, but you still have to access the file under "/foo/bar.txt".
+    /// </summary>
     public class GlobPatternFilterFileProvider : IFileProvider
     {
         private readonly IFileProvider _inner;

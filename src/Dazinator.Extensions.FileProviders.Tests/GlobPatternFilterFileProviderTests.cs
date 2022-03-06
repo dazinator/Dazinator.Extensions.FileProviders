@@ -25,7 +25,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
             var files = sut.GetDirectoryContents(getDirectoryContentsPath);
             Assert.NotEmpty(files);
 
-            var fileList = files.ToList();
+            var fileList = files.Where(a => !a.IsDirectory).ToList();
 
             if (fileList.Count > expectedFileInfoNames.Length)
             {
