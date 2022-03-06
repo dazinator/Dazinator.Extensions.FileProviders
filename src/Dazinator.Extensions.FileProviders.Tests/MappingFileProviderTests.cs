@@ -320,6 +320,33 @@ namespace Dazinator.Extensions.FileProviders.Tests
             return inMemoryFileProvider;
         }
 
+        [Fact]
+        public void Readme_Example_PatternMapping_Works()
+        {
+            var sourceFileProvider = new InMemoryFileProvider();
+
+            // add some source files at `/foo/bar/test.txt` and `/foo/bar/test.csv`
+            sourceFileProvider.Directory.AddFile("/foo/bar",
+                               new StringFileInfo("dummy contents", "test.txt"));
+            sourceFileProvider.Directory.AddFile("/foo/bar",
+                               new StringFileInfo("dummy contents", "test.csv"));
+
+
+
+            // Create the map first:
+            var fileMap = new FileMap();
+            fileMap.MapPath("/my-files", (pathMappings) =>
+            {
+                pathMappings.AddPatternMapping("**/*.txt", sourceFileProvider);
+            });
+
+            var mappingFileProvider = new MappingFileProvider(fileMap);
+            var file = mappingFileProvider.GetFileInfo("/my-files/foo/bar/test.txt");
+            Assert.True(file.Exists);
+
+            file = mappingFileProvider.GetFileInfo("/my-files/foo/bar/test.csv");
+            Assert.False(file.Exists);
+        }
 
     }
 

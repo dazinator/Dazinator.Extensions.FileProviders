@@ -35,7 +35,7 @@ Now you can resolve exactly the same content (files and directories), but now it
 Allows you to provide files from an in memory directory.
 For example:
 
-```
+```csharp
 
              // Arrange
             var provider = new InMemoryFileProvider();
@@ -54,7 +54,7 @@ You can set up the directory first, or perform operations on the `IDirectory` in
 
 For example:
 
-```
+```csharp
 
             // Arrange
             IDirectory directory = new InMemoryDirectory();
@@ -75,7 +75,7 @@ You can add, update, delete files in the `IDirectory` as you might expect. You c
 The following adds a file to the directory at `/some/dir/foo.txt` with the contents "contents":
 
 
-```
+```csharp
 var file = directory.AddFile("/some/dir", new StringFileInfo("contents","foo.txt"));
 
 ```
@@ -91,7 +91,7 @@ For example, if you have a folder in the underlying provider "/foo" and you wrap
 even though the directory name doesn't strictly match the pattern. This is because the patterns are applied to files only. This was better for optimisation purposes.
 Example:
 
-```
+```csharp
 
             var dir = System.IO.Directory.GetCurrentDirectory();
             var physicalFileProvider = new PhysicalFileProvider(dir); // underlying file provider.
@@ -146,29 +146,35 @@ Assert.True(file.Exists);
 
 
 ```csharp
-var sourceFileProvider = new InMemoryFileProvider();
 
- // add some source files at `/foo/bar/test.txt` and `/foo/bar/test.csv`
- sourceFileProvider.Directory.AddFile("/foo/bar", 
-                    new StringFileInfo("dummy contents", "test.txt"));
- sourceFileProvider.Directory.AddFile("/foo/bar", 
-                    new StringFileInfo("dummy contents", "test.csv"));
+        [Fact]
+        public void Readme_Example_PatternMapping_Works()
+        {
+            var sourceFileProvider = new InMemoryFileProvider();
+
+            // add some source files at `/foo/bar/test.txt` and `/foo/bar/test.csv`
+            sourceFileProvider.Directory.AddFile("/foo/bar",
+                               new StringFileInfo("dummy contents", "test.txt"));
+            sourceFileProvider.Directory.AddFile("/foo/bar",
+                               new StringFileInfo("dummy contents", "test.csv"));
 
 
 
-// Create the map first:
-var fileMap = new FileMap();
-fileMap.MapPath("/my-files", (pathMappings) =>
-        {            
-          pathMappings.AddPatternMapping("**/*.txt", inMemoryFileProvider);               
-        });
+            // Create the map first:
+            var fileMap = new FileMap();
+            fileMap.MapPath("/my-files", (pathMappings) =>
+            {
+                pathMappings.AddPatternMapping("**/*.txt", sourceFileProvider);
+            });
 
-var mappingFileProvider = new MappingFileProvider(fileMap);
-var file = mappingFileProvider.GetFileInfo("/my-files/test.txt");
-Assert.True(file.Exists);
+            var mappingFileProvider = new MappingFileProvider(fileMap);
+            var file = mappingFileProvider.GetFileInfo("/my-files/foo/bar/test.txt");
+            Assert.True(file.Exists);
 
-var file = mappingFileProvider.GetFileInfo("/my-files/test.csv");
-Assert.False(file.Exists);
+            file = mappingFileProvider.GetFileInfo("/my-files/foo/bar/test.csv");
+            Assert.False(file.Exists);
+        }
+
 
 ```
 
@@ -199,7 +205,7 @@ To facilitate the serving of static assets, there is an extension method that ca
 
 1. Load the manifest from the file:
 
-```
+```csharp
             var manifestFile = fp.GetFileInfo(resourcePath);
             using (var stream = manifestFile.CreateReadStream())
             {
@@ -213,7 +219,7 @@ To facilitate the serving of static assets, there is an extension method that ca
 factory function to return the `IFileProvider`s that will back the list of `ContentRoot`s specified in the manifest. Typically
 you will want to return the PhysicalFileProvider`s. I use InMemory ones as this was test code.
 
-```
+```csharp
  var map = new FileMap();
 
  map.AddFromStaticWebAssetsManifest(manifest, (contentRoot) =>
