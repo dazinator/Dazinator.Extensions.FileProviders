@@ -378,7 +378,17 @@ namespace Dazinator.Extensions.FileProviders.Mapping
                 }
                 else
                 {
-                    var candidateDirectoryPath = string.Join('/', fullRequestpathSegments[_sourcePathDepth.Value..]);
+                    string candidateDirectoryPath = string.Empty;
+                    if (_sourcePathDepth.Value > (fullRequestpathSegments.Length) - 1)
+                    {
+                        // not enough directory segments to form a root so just match file name.
+
+                    }
+                    else
+                    {
+                        candidateDirectoryPath = string.Join('/', fullRequestpathSegments[_sourcePathDepth.Value..]);
+
+                    }
                     filePathToMatch = string.IsNullOrEmpty(candidateDirectoryPath) ? filePath : new PathString($"/{candidateDirectoryPath}");
                 }
 
