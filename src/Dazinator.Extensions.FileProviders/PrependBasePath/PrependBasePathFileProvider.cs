@@ -72,7 +72,7 @@ namespace Dazinator.Extensions.FileProviders.PrependBasePath
             PathString newPath;
             if (TryMapSubPath(subpath, out newPath))
             {
-                var result = _underlyingFileProvider.GetFileInfo(newPath);
+                var result = _underlyingFileProvider.GetFileInfo(newPath.Value);
                 return result;
             }
 
@@ -86,7 +86,7 @@ namespace Dazinator.Extensions.FileProviders.PrependBasePath
             PathString newPath;
             if (TryMapSubPath(filter, out newPath))
             {
-                var result = _underlyingFileProvider.Watch(newPath);
+                var result = _underlyingFileProvider.Watch(newPath.Value);
                 return result;
             }
 
