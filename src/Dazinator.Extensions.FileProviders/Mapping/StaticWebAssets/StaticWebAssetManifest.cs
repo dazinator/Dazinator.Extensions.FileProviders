@@ -63,7 +63,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
             public override Dictionary<string, StaticWebAssetNode> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
             {
                 var parsed = JsonSerializer.Deserialize<IDictionary<string, StaticWebAssetNode>>(ref reader, options)!;
-                var result = new Dictionary<string, StaticWebAssetNode>(StaticWebAssetManifest.PathComparer);
+                var result = new Dictionary<string, StaticWebAssetNode>(PathComparer);
                 MergeChildren(parsed, result);
                 return result;
 

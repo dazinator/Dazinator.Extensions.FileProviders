@@ -10,9 +10,9 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
     public static class FileMapExtensions
     {
         public static FileMap AddFromStaticWebAssetsManifest(this FileMap map,
-            StaticWebAssetManifest manifest,
-            Func<string, IFileProvider> contentRootFileProviderFactory,
-            Func<FileMap, bool> isPathMappingAllowed = null)
+      StaticWebAssetManifest manifest,
+      Func<string, IFileProvider> contentRootFileProviderFactory,
+      Func<FileMap, bool> isPathMappingAllowed = null)
         {
             PopulateFromManifest(map, manifest, contentRootFileProviderFactory, isPathMappingAllowed);
             return map;
@@ -23,7 +23,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
             Func<string, IFileProvider> contentRootFileProviderFactory,
             Func<FileMap, bool> isPathMappingAllowed = null)
         {
-            Lazy<IFileProvider>[] fps = new Lazy<IFileProvider>[manifest.ContentRoots.Length];
+            var fps = new Lazy<IFileProvider>[manifest.ContentRoots.Length];
             for (int i = 0; i < fps.Length; i++)
             {
                 var indexCaptured = i;
@@ -31,7 +31,7 @@ namespace Dazinator.Extensions.FileProviders.Mapping.StaticWebAssets
                 // patterns[i] = new Tuple<List<string>, List<string>>(new List<string>(), new List<string>());
             }
 
-            Stack<Tuple<string, StaticWebAssetNode, FileMap>> stack = new Stack<Tuple<string, StaticWebAssetNode, FileMap>>();
+            var stack = new Stack<Tuple<string, StaticWebAssetNode, FileMap>>();
             stack.Push(new Tuple<string, StaticWebAssetNode, FileMap>(string.Empty, manifest.Root, map));
 
             while (stack.TryPop(out var tuple))
