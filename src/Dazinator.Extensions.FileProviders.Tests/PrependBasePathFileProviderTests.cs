@@ -206,7 +206,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
             // Modify the file. Should trigger the change token callback as we are watching the file.
             File.WriteAllText(tempFilePhysicalFilePath, "Some more file content");
             // Assert
-            afterFileChangeEvent.WaitOne(new TimeSpan(0, 0, 1));
+            afterFileChangeEvent.WaitOne(new TimeSpan(0, 0, 2));
             Assert.True(changeFired);
             
             Directory.Delete(rootDir, true);

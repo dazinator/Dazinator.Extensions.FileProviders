@@ -9,6 +9,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
     public class GlobPatternFilterFileProviderTests
     {
         [Theory]
+        [InlineData("", "/TestDir/AnotherFolder/*(ÆØÅ).txt", "/TestDir/AnotherFolder", new string[] { "TestFileWithSpecialCharsInName (ÆØÅ).txt" })]
         [InlineData("", "/TestDir/*.txt", "/TestDir", new string[] { "TestFile.txt" })]
         [InlineData("TestDir/csv", "[bB]a*.csv", "", new string[] { "ba_1_2.csv" })]
         public void Can_Get_Filtered_Directory_Contents(string rootFolderDir, string includeGlob, string getDirectoryContentsPath, string[] expectedFileInfoNames)
