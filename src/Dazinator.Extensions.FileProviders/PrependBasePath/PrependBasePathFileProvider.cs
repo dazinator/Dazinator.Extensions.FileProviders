@@ -72,7 +72,7 @@ namespace Dazinator.Extensions.FileProviders.PrependBasePath
             PathString newPath;
             if (TryMapSubPath(subpath, out newPath))
             {
-                var result = _underlyingFileProvider.GetFileInfo(newPath);
+                var result = _underlyingFileProvider.GetFileInfo(newPath.Value);
                 return result;
             }
 
@@ -81,12 +81,20 @@ namespace Dazinator.Extensions.FileProviders.PrependBasePath
 
         public IChangeToken Watch(string filter)
         {
-            // We check if the pattern starts with the base path, and remove it if necessary.
-            // otherwise we just pass the pattern through unaltered.
+            // We check if the pattern starts with the base path, and remove that portion if necessary before passing the rest to the
+            // underlying provider (as the base path prefix is fictitious and not really part of the path of any files in the underlyign provider so passing the pattern as is would not match anything)
+
+            // otherwise if the pattern does not start with our fictitious base path,
+            // we end up passing null as the pattern (which shouldn't match anything in the underlying provider?)
+
+            // note: thios would mean you couldn't use patterns like "**/" but instead have to use "/[basepath]/**" for them to work with this provider
+            // todo: this should probably be documented if not alrready.. 
+            // not sure if this is desirable behaviour or not, perhaps it would be better to pass down the filter in this situation even though it doesn't start with our base path ?
+
             PathString newPath;
             if (TryMapSubPath(filter, out newPath))
             {
-                var result = _underlyingFileProvider.Watch(newPath);
+                var result = _underlyingFileProvider.Watch(newPath.Value);
                 return result;
             }
 
