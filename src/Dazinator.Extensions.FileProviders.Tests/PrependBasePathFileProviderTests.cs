@@ -188,7 +188,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
             var tempFileName = fileName + DateTime.Now.Ticks + ".txt";
             var tempFilePhysicalFilePath = Path.Combine(rootDir, tempFileName);
             File.WriteAllText(tempFilePhysicalFilePath, "Some file content");
-            
+
             var physicalFileProvider = new PhysicalFileProvider(rootDir);
             var sut = new PrependBasePathFileProvider("/somepath", physicalFileProvider);
 
@@ -208,7 +208,7 @@ namespace Dazinator.Extensions.FileProviders.Tests
             // Assert
             afterFileChangeEvent.WaitOne(new TimeSpan(0, 0, 2));
             Assert.True(changeFired);
-            
+
             Directory.Delete(rootDir, true);
         }
     }
