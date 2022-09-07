@@ -199,14 +199,14 @@ namespace Dazinator.Extensions.FileProviders.Tests
             var changeFired = false;
             token.RegisterChangeCallback((a) =>
             {
-                afterFileChangeEvent.Set();
                 changeFired = true;
+                afterFileChangeEvent.Set();
             }, null);
 
             // Modify the file. Should trigger the change token callback as we are watching the file.
             File.WriteAllText(tempFilePhysicalFilePath, "Some more file content");
             // Assert
-            afterFileChangeEvent.WaitOne(new TimeSpan(0, 0, 2));
+            afterFileChangeEvent.WaitOne(new TimeSpan(0, 0, 1));
             Assert.True(changeFired);
 
             Directory.Delete(rootDir, true);
